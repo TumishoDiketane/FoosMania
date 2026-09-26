@@ -1,0 +1,307 @@
+<style>
+    /* =====================================================================
+       Table Soccer — Home / Lobby (FIFA Street theme)
+       SPA partial: styles are scoped under .home-shell to prevent leaking.
+       ===================================================================== */
+
+    .home-shell {
+        --panel-border: rgba(255, 255, 255, 0.09);
+        --ink:          #f3f5f8;
+        --ink-dim:      #a8afb8;
+        --ink-mute:     #6c7079;
+        --accent:       #2e9bf0;
+        --accent-hi:    #57b2ff;
+        --accent-lo:    #1a7bd2;
+        --field-bg:     #0f1318;
+        --field-border: #dfe3e8;
+
+        position: fixed;
+        inset: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        box-sizing: border-box;
+
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+
+        background-color: #0b0d10;
+        background-image:
+            radial-gradient(125% 120% at 50% 22%, rgba(9, 12, 16, 0.30), rgba(5, 8, 12, 0.82) 92%),
+            url("/images/Refresh_Background_Portrait.webp");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+    }
+
+    .home-shell *, .home-shell *::before, .home-shell *::after {
+        box-sizing: border-box;
+    }
+
+    .home-shell [hidden] {
+        display: none !important;
+    }
+
+    .home-shell .home-inner {
+        width: 100%;
+        max-width: 420px; /* Mobile panel width */
+        margin: auto;     /* Centered vertically and horizontally */
+        
+        background: linear-gradient(165deg, rgba(30, 34, 39, 0.95), rgba(18, 21, 26, 0.95));
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        padding: 28px 24px;
+        box-shadow: 0 24px 50px -26px rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+    }
+
+    /* ---- Header Section ------------------------------------------------ */
+
+    .home-shell .home-head {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .home-shell .brand {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* Center on mobile */
+        gap: 12px;
+    }
+
+    .home-shell .kicker {
+        margin: 0 0 2px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+    }
+
+    .home-shell .room-title {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.05;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--ink);
+    }
+
+    /* ---- Buttons ------------------------------------------------------- */
+
+    .home-shell .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        padding: 14px 24px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 10px;
+        background: linear-gradient(180deg, var(--accent-hi), var(--accent) 46%, var(--accent-lo));
+        box-shadow:
+            0 12px 24px -12px rgba(46, 155, 240, 0.8),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+        transition: transform 90ms ease, filter 130ms ease;
+        width: 100%; /* Full width on mobile */
+    }
+
+    .home-shell .action-btn:hover { filter: brightness(1.06); }
+    .home-shell .action-btn:active { transform: translateY(1px); }
+
+    /* ---- Sections & Inputs --------------------------------------------- */
+
+    .home-shell .divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.06);
+        margin: 24px 0;
+    }
+
+    .home-shell .section-title {
+        margin: 0 0 12px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+    }
+
+    .home-shell .input-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: var(--ink-mute);
+    }
+
+    .home-shell .join-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .home-shell .join-group input {
+        width: 100%;
+        padding: 13px 16px;
+        font: inherit;
+        font-size: 16px; /* Prevents iOS zoom */
+        color: var(--ink);
+        background: var(--field-bg);
+        border: 2px solid #23272c;
+        border-radius: 8px;
+        outline: none;
+        transition: border-color 130ms ease, box-shadow 130ms ease;
+    }
+
+    .home-shell .join-group input::placeholder { color: var(--ink-mute); }
+    
+    .home-shell .join-group input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(46, 155, 240, 0.28);
+    }
+
+    /* ---- Active Rooms & Empty State ------------------------------------ */
+    
+    .home-shell .room-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr;
+    }
+
+    .home-shell .room-grid .room-card {
+        background: linear-gradient(165deg, #363c44, #2b3037);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .home-shell .room-card .pill {
+        background: #525a67;
+        color: var(--ink-dim);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+    }
+
+    .home-shell .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0;
+        gap: 12px;
+        color: var(--ink-mute);
+    }
+
+    .home-shell .empty-state svg {
+        width: 32px;
+        height: 32px;
+        opacity: 0.5;
+    }
+
+    .home-shell .empty-state p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    @media (orientation: landscape), (min-width: 720px) {
+        .home-shell {
+            padding: 40px 28px;
+            background-image:
+                radial-gradient(120% 130% at 50% 25%, rgba(9, 12, 16, 0.28), rgba(5, 8, 12, 0.80) 92%),
+                url("/images/Refresh_Background_Landscape.webp");
+        }
+
+        .home-shell .home-inner {
+            max-width: 800px; /* Expand panel horizontally */
+            padding: 36px 40px;
+        }
+
+        .home-shell .home-head {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between; /* Brand left, Button right */
+            margin-bottom: 28px;
+        }
+
+        .home-shell .brand {
+            justify-content: flex-start;
+        }
+
+        .home-shell .action-btn.create-btn {
+            width: auto; /* Shrink to fit text */
+            padding: 12px 28px;
+        }
+
+        .home-shell .join-group {
+            flex-direction: row;
+            align-items: stretch; /* Align input and button heights */
+        }
+
+        .home-shell .join-group input {
+            flex: 1; /* Input takes up remaining space */
+        }
+
+        .home-shell .action-btn.join-btn {
+            width: auto;
+            flex: 0 0 auto;
+        }
+
+        .home-shell .room-grid {
+            grid-template-columns: repeat(2, 1fr); /* 2 columns on desktop */
+        }
+    }
+</style>
+
+<div class="home-shell">
+    <div class="home-inner">
+        
+        <header class="home-head">
+            <div class="brand">
+                <div class="brand-text">
+                    <p class="kicker">Create/Join A Room</p>
+                    <h1 class="room-title">FOOFA Street</h1>
+                </div>
+            </div>
+            <a class="action-btn create-btn nav-link" href="/create-room">Create room</a>
+        </header>
+
+        <div class="divider"></div>
+
+        <section class="join-section">
+            <h2 class="section-title">Have a code?</h2>
+            <label for="room-code" class="input-label">Use room codes to join public and private rooms.</label>
+            <div class="join-group">
+                <input id="room-code" name="code" type="text" placeholder="Enter room code">
+                <button id="join-with-code-button" class="action-btn join-btn" type="button">Join Room</button>
+            </div>
+            <p id="join-status" class="form-hint" aria-live="polite"></p>
+        </section>
+
+        <div class="divider"></div>
+
+        <section class="active-section">
+            <h2 class="section-title">Active Matches</h2>
+            
+            <div id="room-list" class="room-grid" aria-live="polite"></div>
+            
+            <div id="empty-room-state" class="empty-state" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 10h.01M15 10h.01M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/>
+                </svg>
+                <p>No active rooms yet.</p>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script src="/javascript/home.js"></script>

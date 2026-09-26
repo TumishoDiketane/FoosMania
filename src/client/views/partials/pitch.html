@@ -1,0 +1,328 @@
+<!-- the match itself: pitch canvas, gyro/tap/flick + WASD/Space controls -->
+<style>
+    /* SPA partial: styles scoped under .pitch-shell so nothing leaks into
+       other views. */
+
+    .pitch-shell {
+        position: fixed;
+        inset: 0;
+        overflow-y: auto;
+        box-sizing: border-box;
+
+        font-family: sans-serif;
+        background: #222;
+        color: #fff;
+        text-align: center;
+    }
+
+    .pitch-shell *,
+    .pitch-shell *::before,
+    .pitch-shell *::after {
+        box-sizing: border-box;
+    }
+
+    .pitch-shell [hidden] {
+        display: none !important;
+    }
+
+    .pitch-shell #scoreline {
+        font-size: 1.5rem;
+        padding: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .pitch-shell #match-clock {
+        font-size: 1.1rem;
+        font-variant-numeric: tabular-nums;
+        color: #ff0;
+    }
+
+    .pitch-shell #enable-motion {
+        font-size: 1.1rem;
+        background: #ff0;
+        color: #222;
+        border: none;
+        padding: 10px 20px;
+        margin-bottom: 10px;
+    }
+
+    .pitch-shell #pitch-container {
+        display: inline-flex;
+        justify-content: center;
+        position: relative;
+        width: 100%;
+    }
+
+    .pitch-shell #pitch {
+        display: block;
+        max-width: 95vw;
+        max-height: 80vh;
+        width: auto;
+        height: auto;
+        touch-action: none;
+        position: relative;
+        z-index: 1;
+    }
+
+    .pitch-shell #flick {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #ff0;
+        pointer-events: none;
+        z-index: 3;
+    }
+
+    .pitch-shell #gauge {
+        width: 60%;
+        max-width: 400px;
+        height: 20px;
+        margin: 12px auto;
+        background: #444;
+        border: 1px solid #fff;
+    }
+
+    .pitch-shell #gauge-fill {
+        width: 0%;
+        height: 100%;
+        background: #ff0;
+    }
+
+    .pitch-shell #hint {
+        padding: 8px;
+        font-size: 0.9rem;
+        color: #aaa;
+    }
+
+    /* ---- Stadium chrome: landscape (desktop + spectators) only ---------- */
+    /* Mobile portrait players get the bare pitch, nothing else.            */
+
+    .pitch-shell .stadium {
+        display: none;
+    }
+
+    @media (orientation: landscape) {
+        .pitch-shell #pitch-container.in-stadium {
+            padding: 42px 64px 24px;
+            border-radius: 18px;
+            /* stands: banked rows of seats drawn as repeating gradients */
+            background:
+                repeating-linear-gradient(0deg,
+                    #2a2f36 0px, #2a2f36 7px,
+                    #343a43 7px, #343a43 9px),
+                #2a2f36;
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.65);
+        }
+
+        .pitch-shell .stadium {
+            display: block;
+            position: absolute;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* crowd shimmer strip above the pitch */
+        .pitch-shell .stadium.crowd {
+            top: 8px;
+            left: 64px;
+            right: 64px;
+            height: 26px;
+            border-radius: 6px;
+            background:
+                radial-gradient(circle at 10% 50%, rgba(255, 255, 255, 0.25) 1.5px, transparent 2px),
+                radial-gradient(circle at 35% 30%, rgba(255, 220, 150, 0.25) 1.5px, transparent 2px),
+                radial-gradient(circle at 60% 60%, rgba(150, 200, 255, 0.25) 1.5px, transparent 2px),
+                radial-gradient(circle at 85% 40%, rgba(255, 150, 150, 0.25) 1.5px, transparent 2px),
+                #1d2126;
+            background-size: 46px 13px, 38px 11px, 52px 15px, 44px 12px, auto;
+        }
+
+        /* designated flag region per side, filled with stacked flag icons */
+        .pitch-shell .stadium.flag {
+            top: 42px;
+            bottom: 24px;
+            width: 56px;
+            border-radius: 6px;
+            border: 2px solid rgba(0, 0, 0, 0.45);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pitch-shell .stadium.flag.left {
+            left: 4px;
+        }
+
+        .pitch-shell .stadium.flag.right {
+            right: 4px;
+        }
+
+        .pitch-shell .stadium.flag .fi {
+            flex: 1;
+            width: 100%;
+            background-size: cover;
+            background-position: center;
+            border-radius: 0;
+        }
+    }
+
+    /* ---- Goal overlay --------------------------------------------------- */
+
+    .pitch-shell #goal-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .pitch-shell #goal-overlay.visible {
+        opacity: 1;
+    }
+
+    .pitch-shell #goal-overlay .goal-text {
+        font-size: clamp(3rem, 10vw, 7rem);
+        font-weight: 900;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #fff;
+        text-shadow:
+            0 0 30px rgba(255, 220, 0, 0.9),
+            0 0 60px rgba(255, 200, 0, 0.6),
+            3px 3px 0 rgba(0,0,0,0.5);
+        animation: goal-pulse 0.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes goal-pulse {
+        from { transform: scale(1); }
+        to { transform: scale(1.06); }
+    }
+
+    /* ---- Kickoff / goal countdown ---------------------------------------- */
+
+    .pitch-shell #countdown {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 11;
+    }
+
+    .pitch-shell #countdown span {
+        font-size: clamp(90px, 32vmin, 240px);
+        font-weight: 800;
+        color: #fff;
+        text-shadow: 0 0 24px rgba(0, 0, 0, 0.8), 0 4px 10px rgba(0, 0, 0, 0.6);
+        animation: countdown-zoom 1s ease-out forwards;
+    }
+
+    @keyframes countdown-zoom {
+        0% {
+            transform: scale(0.3);
+            opacity: 0;
+        }
+
+        25% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(2.4);
+            opacity: 0;
+        }
+    }
+
+    /* ---- Powerup pickup toast -------------------------------------------- */
+
+    .pitch-shell #powerup-toast {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(12px);
+        padding: 8px 18px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.75);
+        border: 2px solid var(--powerup-color, #ffe14d);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 6;
+        opacity: 0;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .pitch-shell #powerup-toast.visible {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    /* ---- Goal confetti (client-only cosmetic) ---------------------------- */
+
+    .pitch-shell #confetti {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 4;
+    }
+
+    .pitch-shell .confetti-bit {
+        position: absolute;
+        top: -12px;
+        width: 8px;
+        height: 12px;
+        animation: confetti-fall 1.4s ease-in forwards;
+    }
+
+    @keyframes confetti-fall {
+        to {
+            transform: translateY(110vh) rotate(720deg);
+            opacity: 0.2;
+        }
+    }
+</style>
+
+<div class="pitch-shell">
+    <div id="scoreline">
+        <span id="score-a" class="team-a">Team 1 0</span>
+        <span>-</span>
+        <span id="score-b" class="team-b">0 Team 2</span>
+        <span id="match-clock" hidden>0:00</span>
+    </div>
+    <button id="enable-motion" hidden>Enable motion controls</button>
+    <div id="pitch-container">
+        <div class="stadium crowd"></div>
+        <div class="stadium flag left" id="flag-home"></div>
+        <div class="stadium flag right" id="flag-away"></div>
+        <canvas id="pitch" width="800" height="500"></canvas>
+        <div id="flick" hidden>FLICK!</div>
+        <div id="goal-overlay"><span class="goal-text">GOAL!!!</span></div>
+        <div id="countdown" hidden></div>
+        <div id="powerup-toast"></div>
+    </div>
+    <div id="gauge">
+        <div id="gauge-fill"></div>
+    </div>
+    <div id="hint">Connecting...</div>
+    <div id="confetti"></div>
+</div>
+
+<script src="/javascript/sounds.js"></script>
+<script src="/javascript/pitch.js"></script>

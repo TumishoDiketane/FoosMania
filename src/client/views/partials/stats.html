@@ -1,0 +1,268 @@
+<!-- full-time stats: final score, your match stats, golden boot race -->
+<style>
+    /* SPA partial: styles scoped under .stats-shell. Shares the FIFA-street
+       scheme used by the home / pregame / create-room views so the app reads
+       as one design (dark panels, blue accent, wall-art background). */
+
+    .stats-shell {
+        --panel-border: rgba(255, 255, 255, 0.09);
+        --ink: #f3f5f8;
+        --ink-dim: #a8afb8;
+        --ink-mute: #6c7079;
+        --accent: #2e9bf0;
+        --accent-hi: #57b2ff;
+        --accent-lo: #1a7bd2;
+        --field-bg: #0f1318;
+
+        position: fixed;
+        inset: 0;
+        overflow-y: auto;
+        box-sizing: border-box;
+        padding: 28px 18px 44px;
+
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: var(--ink);
+        text-align: center;
+        -webkit-font-smoothing: antialiased;
+
+        background-color: #0b0d10;
+        background-image:
+            radial-gradient(125% 120% at 50% 22%, rgba(9, 12, 16, 0.30), rgba(5, 8, 12, 0.82) 92%),
+            url("/images/Refresh_Background_Portrait.webp");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+    }
+
+    .stats-shell *,
+    .stats-shell *::before,
+    .stats-shell *::after {
+        box-sizing: border-box;
+    }
+
+    .stats-shell [hidden] {
+        display: none !important;
+    }
+
+    .stats-shell .stats-inner {
+        max-width: 560px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .stats-shell .full-time {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+    }
+
+    .stats-shell #final-score {
+        margin-top: 6px;
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        display: flex;
+        justify-content: center;
+        align-items: baseline;
+        gap: 14px;
+        flex-wrap: wrap;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+    }
+
+    .stats-shell #winner-line {
+        margin: 6px 0 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--accent-hi);
+    }
+
+    .stats-shell .panel {
+        background: linear-gradient(165deg, rgba(30, 34, 39, 0.92), rgba(18, 21, 26, 0.92));
+        border: 1px solid var(--panel-border);
+        border-radius: 14px;
+        padding: 18px 20px;
+        box-shadow: 0 24px 50px -26px rgba(0, 0, 0, 0.8);
+    }
+
+    .stats-shell h2 {
+        margin: 0 0 14px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+    }
+
+    .stats-shell .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    .stats-shell .stat-card {
+        background: var(--field-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        padding: 14px 6px;
+    }
+
+    .stats-shell .stat-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--ink);
+    }
+
+    .stats-shell .stat-label {
+        margin-top: 4px;
+        font-size: 0.72rem;
+        color: var(--ink-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .stats-shell #boot-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        text-align: left;
+    }
+
+    .stats-shell .boot-row {
+        display: grid;
+        grid-template-columns: 28px 1fr 32px;
+        align-items: center;
+        gap: 10px;
+        background: var(--field-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+
+    .stats-shell .boot-rank {
+        color: var(--ink-dim);
+        font-size: 0.9rem;
+    }
+
+    .stats-shell .boot-player {
+        min-width: 0;
+    }
+
+    .stats-shell .boot-name {
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .stats-shell .boot-name .you-tag {
+        color: var(--accent-hi);
+        font-weight: normal;
+        font-size: 0.8rem;
+    }
+
+    .stats-shell .boot-bar {
+        height: 6px;
+        border-radius: 3px;
+        margin-top: 5px;
+        background: rgba(255, 255, 255, 0.10);
+        overflow: hidden;
+    }
+
+    .stats-shell .boot-bar-fill {
+        height: 100%;
+    }
+
+    .stats-shell .boot-goals {
+        font-size: 1.2rem;
+        font-weight: 800;
+        text-align: right;
+    }
+
+    /* Shared button language: the blue accent gradient used across the app. */
+    .stats-shell #home-button {
+        align-self: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        padding: 13px 30px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        border-radius: 10px;
+        background: linear-gradient(180deg, var(--accent-hi), var(--accent) 46%, var(--accent-lo));
+        box-shadow:
+            0 12px 24px -12px rgba(46, 155, 240, 0.8),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+        transition: transform 90ms ease, filter 130ms ease;
+    }
+
+    .stats-shell #home-button:hover {
+        filter: brightness(1.06);
+    }
+
+    .stats-shell #home-button:active {
+        transform: translateY(1px);
+    }
+
+    @media (orientation: landscape), (min-width: 720px) {
+        .stats-shell {
+            background-image:
+                radial-gradient(120% 130% at 50% 25%, rgba(9, 12, 16, 0.28), rgba(5, 8, 12, 0.80) 92%),
+                url("/images/Refresh_Background_Landscape.webp");
+        }
+    }
+</style>
+
+<div class="stats-shell">
+    <div class="stats-inner">
+        <header>
+            <p class="full-time">Full time</p>
+            <div id="final-score">Loading...</div>
+            <p id="winner-line"></p>
+        </header>
+
+        <section id="my-stats-section" class="panel">
+            <h2>Your match stats</h2>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div id="stat-touches" class="stat-value">0</div>
+                    <div class="stat-label">Touches</div>
+                </div>
+                <div class="stat-card">
+                    <div id="stat-passes" class="stat-value">0</div>
+                    <div class="stat-label">Passes</div>
+                </div>
+                <div class="stat-card">
+                    <div id="stat-shots" class="stat-value">0</div>
+                    <div class="stat-label">Shots</div>
+                </div>
+                <div class="stat-card">
+                    <div id="stat-goals" class="stat-value">0</div>
+                    <div class="stat-label">Goals</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Golden boot race</h2>
+            <div id="boot-list"></div>
+        </section>
+
+        <button id="home-button">Back to home</button>
+    </div>
+</div>
+
+<script src="/javascript/kits.js"></script>
+<script src="/javascript/sounds.js"></script>
+<script src="/javascript/stats.js"></script>
