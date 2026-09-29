@@ -104,11 +104,6 @@ Country flags are served straight from the `flag-icons` package, mounted at
 
 | Member | GitHub |
 |---|---|
-| Cable | [@cablexd](https://github.com/cablexd) |
-| Michael Bruwer Swartz | [@MichaelBruwerSwartz](https://github.com/MichaelBruwerSwartz) |
-| Siphesihle Mhlongo | [@sihlecodes](https://github.com/sihlecodes) |
-| Lesedi Manganyi | [@General-66](https://github.com/General-66) |
-| Lesiba Ledwaba | [@lesib-a](https://github.com/lesib-a)|
 
 ## License
 
