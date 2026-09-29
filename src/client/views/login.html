@@ -1,0 +1,39 @@
+<!-- input username -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Soccer - Login</title>
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+    <main class="login-stage">
+        <section class="plate">
+            <div class="plate-inner">
+                <div class="brand">
+                    <div class="brand-text">
+                        <p class="brand-kicker">FOOFA Street</p>
+                        <h1 class="brand-title">Pick a username<br>and step in.</h1>
+                    </div>
+                </div>
+
+                <p class="lede">Use a short username so it fits nicely in rooms, teams, and the match screen.</p>
+
+                <form class="form-grid" action="home" method="get">
+                    <div class="field">
+                        <label for="username">Input username</label>
+                        <input id="username" name="username" type="text" placeholder="e.g. bbdgamer1912" maxlength="25" autocomplete="nickname" required>
+                    </div>
+                    <p id="validation-message"></p>
+                    <div class="action-row">
+                        <button id="submit-button" class="enter-btn" type="submit">Continue</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+    <script src="/javascript/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,823 @@
+<!-- manage game, view players, and start game -->
+<style>
+    /* =====================================================================
+       Table Soccer — Pregame / Waiting room (FIFA Street theme)
+       SPA partial: styles are inlined and scoped under .pregame-shell so
+       nothing leaks into other views, and the shared shell + pregame.js are
+       left untouched.
+
+       Wall art reused from the login/lobby refresh (served from /images/):
+         - /images/Refresh_Background_Portrait.webp   (portrait / phones)
+         - /images/Refresh_Background_Landscape.webp   (landscape / desktop)
+
+       Layout follows the OG waiting room: brand + Leave room top bar, a wide
+       host / session-code panel, then Teams (Start game on the right) with the
+       two team cards and the unassigned strip below. Spread on desktop,
+       stacked on mobile. Team cards are tinted with the two kit colours of
+       the country currently selected for that team (kits.js), so the lobby
+       matches the shirts on the pitch.
+       ===================================================================== */
+
+    .pregame-shell {
+        --panel-hi: #23272c;
+        --panel-lo: #14171b;
+        --ink: #f3f5f8;
+        --ink-dim: #a8afb8;
+        --ink-mute: #6c7079;
+        --accent: #2e9bf0;
+        --accent-hi: #57b2ff;
+        --accent-lo: #1a7bd2;
+        --field-bg: #0f1318;
+        --panel-border: rgba(255, 255, 255, 0.09);
+        --line: rgba(255, 255, 255, 0.10);
+
+        position: fixed;
+        inset: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-sizing: border-box;
+
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+
+        background-color: #0b0d10;
+        background-image:
+            radial-gradient(125% 120% at 50% 22%, rgba(9, 12, 16, 0.30), rgba(5, 8, 12, 0.82) 92%),
+            url("/images/Refresh_Background_Portrait.webp");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+    }
+
+    .pregame-shell *,
+    .pregame-shell *::before,
+    .pregame-shell *::after {
+        box-sizing: border-box;
+    }
+
+    .pregame-shell [hidden] {
+        display: none !important;
+    }
+
+    .pregame-shell .pregame-inner {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        /* top-aligned, horizontally centered */
+    }
+
+    /* ---- Top bar: brand + Leave room ----------------------------------- */
+
+    .pregame-shell .pregame-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .pregame-shell .brand {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        min-width: 0;
+        /* let a long room name truncate/wrap */
+    }
+
+    .pregame-shell .brand-text {
+        min-width: 0;
+    }
+
+    .pregame-shell .kicker {
+        margin: 0 0 2px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+    }
+
+    .pregame-shell .room-title {
+        margin: 0;
+        font-size: clamp(23px, 6vw, 30px);
+        line-height: 1.05;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--ink);
+        word-break: break-word;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ---- Buttons ------------------------------------------------------- */
+
+    .pregame-shell .ghost-btn {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--ink);
+        text-decoration: none;
+        cursor: pointer;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: background 130ms ease, border-color 130ms ease, transform 90ms ease;
+    }
+
+    .pregame-shell .ghost-btn:hover {
+        background: rgba(255, 255, 255, 0.10);
+        border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .pregame-shell .ghost-btn:active {
+        transform: translateY(1px);
+    }
+
+    .pregame-shell .ghost-btn:focus-visible {
+        outline: 3px solid rgba(87, 178, 255, 0.6);
+        outline-offset: 2px;
+    }
+
+    .pregame-shell .start-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        padding: 13px 30px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        border-radius: 10px;
+        background: linear-gradient(180deg, var(--accent-hi), var(--accent) 46%, var(--accent-lo));
+        box-shadow:
+            0 12px 24px -12px rgba(46, 155, 240, 0.8),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+        transition: transform 90ms ease, filter 130ms ease;
+    }
+
+    .pregame-shell .start-btn:hover {
+        filter: brightness(1.06);
+    }
+
+    .pregame-shell .start-btn:active {
+        transform: translateY(1px);
+    }
+
+    .pregame-shell .start-btn:disabled {
+        background: #2b3037;
+        color: var(--ink-mute);
+        cursor: default;
+        box-shadow: none;
+        filter: none;
+        transform: none;
+    }
+
+    .pregame-shell .start-btn:focus-visible {
+        outline: 3px solid rgba(87, 178, 255, 0.7);
+        outline-offset: 3px;
+    }
+
+    /* ---- Host / session panel ------------------------------------------ */
+
+    .pregame-shell .host-panel {
+        background: linear-gradient(165deg, rgba(30, 34, 39, 0.92), rgba(18, 21, 26, 0.92));
+        border: 1px solid var(--panel-border);
+        border-radius: 14px;
+        padding: 20px 22px;
+        box-shadow: 0 24px 50px -26px rgba(0, 0, 0, 0.8);
+    }
+
+    .pregame-shell .host-top {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .pregame-shell .host-pill {
+        align-self: flex-start;
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        background: rgba(139, 92, 246, 0.16);
+        color: #c4b0f7;
+        border: 1px solid rgba(139, 92, 246, 0.42);
+        margin-bottom: 10px;
+    }
+
+    .pregame-shell .session-line {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .pregame-shell .session-label {
+        font-size: 13px;
+        color: var(--ink-dim);
+    }
+
+    .pregame-shell .code-badge {
+        font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+        letter-spacing: 0.14em;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--ink);
+        background: var(--field-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        padding: 6px 12px;
+    }
+
+    .pregame-shell .copy-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pregame-shell .copy-state {
+        font-size: 12px;
+        color: var(--accent-hi);
+        min-height: 1em;
+    }
+
+    .pregame-shell .room-status {
+        margin: 16px 0 0;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--ink-dim);
+    }
+
+    /* ---- Teams heading + Start game ------------------------------------ */
+
+    .pregame-shell .teams-head {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin: 26px 0 16px;
+    }
+
+    .pregame-shell .teams-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+    }
+
+    /* ---- Team cards ------------------------------------------------------
+       Tinted with the selected country's two kit colours: pregame.js sets
+       --team-grad / --team-soft / --team-border / --team-text per card from
+       kits.js. The vars below are only the pre-kit / spectator fallback. --- */
+
+    .pregame-shell .roster-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .pregame-shell .team-card[data-team="1"] {
+        --team: #e74c3c;
+        --team-soft: rgba(231, 76, 60, 0.16);
+        --team-border: rgba(231, 76, 60, 0.42);
+        --team-text: #f2a69c;
+    }
+
+    .pregame-shell .team-card[data-team="2"] {
+        --team: #2e9bf0;
+        --team-soft: rgba(46, 155, 240, 0.16);
+        --team-border: rgba(46, 155, 240, 0.42);
+        --team-text: #8fd0ff;
+    }
+
+    .pregame-shell .team-card.spectator-card {
+        --team: #7f8c8d;
+        --team-soft: rgba(127, 140, 141, 0.16);
+        --team-border: rgba(127, 140, 141, 0.42);
+        --team-text: #bdc3c7;
+    }
+
+    .pregame-shell .team-card {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(165deg, #1d2126, #14171b);
+        border: 1px solid var(--panel-border);
+        border-radius: 12px;
+        padding: 18px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 13px;
+    }
+
+    /* top strip in the kit's two colours (border-top can't hold a gradient) */
+    .pregame-shell .team-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--team-grad, var(--team));
+    }
+
+    .pregame-shell .team-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .pregame-shell .team-name {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 800;
+        color: var(--ink);
+    }
+
+    .pregame-shell .team-count {
+        flex: 0 0 auto;
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        background: var(--team-soft);
+        color: var(--team-text);
+        border: 1px solid var(--team-border);
+    }
+
+    .pregame-shell .player-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .pregame-shell .player-row {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+
+    .pregame-shell .player-row strong {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink);
+    }
+
+    .pregame-shell .small-note {
+        margin: 0;
+        font-size: 13px;
+        color: var(--ink-mute);
+    }
+
+    .pregame-shell .team-join {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 11px 16px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--ink);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: background 130ms ease, border-color 130ms ease, transform 90ms ease;
+    }
+
+    .pregame-shell .team-join:hover {
+        background: rgba(255, 255, 255, 0.10);
+        border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .pregame-shell .team-join:active {
+        transform: translateY(1px);
+    }
+
+    .pregame-shell .team-join:focus-visible {
+        outline: 3px solid rgba(87, 178, 255, 0.6);
+        outline-offset: 2px;
+    }
+
+    /* On your current team: a filled, team-tinted "selected" state */
+    .pregame-shell .team-join:disabled {
+        cursor: default;
+        transform: none;
+        background: var(--team-soft);
+        border-color: var(--team-border);
+        color: var(--team-text);
+    }
+
+    /* ---- Unassigned strip ---------------------------------------------- */
+
+    .pregame-shell .unassigned-card {
+        background: linear-gradient(165deg, rgba(30, 34, 39, 0.9), rgba(18, 21, 26, 0.9));
+        border: 1px solid var(--panel-border);
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-top: 14px;
+    }
+
+    .pregame-shell .section-copy {
+        margin: 0 0 10px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+    }
+
+    /* ===================================================================
+       Landscape / desktop — OG waiting-room spread
+       =================================================================== */
+
+    @media (orientation: landscape) {
+        .pregame-shell {
+            padding: 40px 28px;
+            background-image:
+                radial-gradient(120% 130% at 50% 25%, rgba(9, 12, 16, 0.28), rgba(5, 8, 12, 0.80) 92%),
+                url("/images/Refresh_Background_Landscape.webp");
+        }
+
+        .pregame-shell .pregame-inner {
+            max-width: 1000px;
+        }
+
+        .pregame-shell .pregame-head {
+            margin-bottom: 24px;
+        }
+
+        .pregame-shell .host-top {
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .pregame-shell .copy-wrap {
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .pregame-shell .teams-head {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .pregame-shell .roster-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+    }
+
+    /* ---- Respect reduced-motion ---------------------------------------- */
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .pregame-shell .ghost-btn,
+        .pregame-shell .start-btn,
+        .pregame-shell .team-join {
+            transition: none;
+        }
+
+        .pregame-shell .ghost-btn:active,
+        .pregame-shell .start-btn:active,
+        .pregame-shell .team-join:active {
+            transform: none;
+        }
+    }
+    /* ---- QR code: centered, on a white quiet-zone card ------------------ */
+
+    .pregame-shell #qrcode {
+        display: flex;
+        justify-content: center;
+        margin: 16px auto 0;
+        width: fit-content;
+        padding: 10px;
+        border-radius: 10px;
+        background: #fff;
+    }
+
+    .pregame-shell #qrcode:empty {
+        display: none;
+    }
+
+    /* ---- Match settings -------------------------------------------------- */
+
+    .pregame-shell .settings-card {
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+
+    .pregame-shell .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .pregame-shell .setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+
+    .pregame-shell .setting-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+    }
+
+    .pregame-shell .setting-row input[type="number"],
+    .pregame-shell .setting-row select {
+        font: inherit;
+        font-size: 14px;
+        color: var(--ink);
+        background: var(--field-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        padding: 6px 10px;
+        max-width: 150px;
+    }
+
+    .pregame-shell .setting-row input[type="range"] {
+        width: 90px;
+    }
+
+    .pregame-shell .setting-row .powerup-name {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pregame-shell .setting-row .powerup-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+    }
+
+    .pregame-shell .powerups-title {
+        margin-top: 14px;
+    }
+
+    /* By default (host view) hide the read-only display elements */
+    .pregame-shell .setting-value,
+    .pregame-shell .settings-readonly-grid {
+        display: none;
+    }
+
+    /* Non-host: show display elements, hide editable inputs */
+    .pregame-shell .settings-card[data-readonly="true"] .host-only {
+        display: none;
+    }
+
+    .pregame-shell .settings-card[data-readonly="true"] .setting-value {
+        display: inline-flex;
+    }
+
+    .pregame-shell .settings-card[data-readonly="true"] .settings-grid {
+        /* Hide the editable rows wrapper — powerup controls are inside */
+    }
+
+    .pregame-shell .settings-card[data-readonly="true"] #setting-powerups {
+        display: none;
+    }
+
+    .pregame-shell .settings-card[data-readonly="true"] .settings-readonly-grid {
+        display: flex;
+    }
+
+    /* Read-only setting value chip shown to non-host players */
+    .pregame-shell .setting-value {
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        background: rgba(46, 155, 240, 0.12);
+        border: 1px solid rgba(46, 155, 240, 0.35);
+        color: var(--accent-hi);
+        white-space: nowrap;
+    }
+
+    /* Powerup on/off pill for non-host */
+    .pregame-shell .powerup-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: var(--ink-dim);
+    }
+
+    .pregame-shell .powerup-pill.active {
+        background: rgba(46, 155, 240, 0.12);
+        border-color: rgba(46, 155, 240, 0.35);
+        color: var(--accent-hi);
+    }
+
+    .pregame-shell .powerup-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+    }
+
+    .pregame-shell .settings-readonly-grid {
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 2px;
+    }
+
+    /* ---- Country picker + host roster controls -------------------------- */
+
+    .pregame-shell .country-select {
+        font: inherit;
+        font-size: 13px;
+        color: var(--ink);
+        background: var(--field-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        padding: 6px 10px;
+    }
+
+    .pregame-shell .player-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .pregame-shell .row-actions {
+        display: inline-flex;
+        gap: 6px;
+    }
+
+    .pregame-shell .row-btn {
+        cursor: pointer;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--ink-dim);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 6px;
+        padding: 4px 8px;
+    }
+
+    .pregame-shell .row-btn:hover {
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    .pregame-shell .row-btn.kick {
+        color: #f2a69c;
+        border-color: rgba(231, 76, 60, 0.42);
+    }
+
+    @media (orientation: landscape) {
+        .pregame-shell .settings-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+<div class="pregame-shell">
+    <div class="pregame-inner">
+        <header class="pregame-head">
+            <div class="brand">
+                <div class="brand-text">
+                    <p class="kicker">Game Lobby</p>
+                    <h1 id="room-name" class="room-title">Loading...</h1>
+                </div>
+            </div>
+            <button id="leave-room-button" class="ghost-btn">Leave room</button>
+        </header>
+
+        <section class="host-panel">
+            <div class="host-top" id="session-code-container">
+                <div class="host-meta">
+                    <span id="host-pill" class="host-pill" hidden>You are host</span>
+                    <div class="session-line">
+                        <span class="session-label">Session code</span>
+                        <span id="room-code" class="code-badge">------</span>
+                    </div>
+                </div>
+                <div class="copy-wrap">
+                    <button id="copy-code" class="ghost-btn" type="button">Copy code</button>
+                    <span id="copy-state" class="copy-state" aria-live="polite"></span>
+                </div>
+            </div>
+            <div id="qrcode"></div>
+            <p id="room-status" class="room-status" aria-live="polite">Players are split into two teams. Pick a side
+                when you're ready.</p>
+        </section>
+
+        <section id="settings-panel" class="unassigned-card settings-card">
+            <p class="section-copy">Match settings <span id="settings-lock" class="small-note"></span></p>
+            <div class="settings-grid">
+                <label class="setting-row">
+                    <span class="setting-label">Goals to win</span>
+                    <input id="setting-goals" class="host-only" type="number" min="1" max="25" step="1" value="5">
+                    <span id="setting-goals-display" class="setting-value">5 goals</span>
+                </label>
+                <label class="setting-row">
+                    <span class="setting-label">Time limit</span>
+                    <select id="setting-duration" class="host-only">
+                        <option value="">No limit</option>
+                        <option value="60">1 minute</option>
+                        <option value="120">2 minutes</option>
+                        <option value="180">3 minutes</option>
+                        <option value="300">5 minutes</option>
+                        <option value="600">10 minutes</option>
+                    </select>
+                    <span id="setting-duration-display" class="setting-value">No limit</span>
+                </label>
+            </div>
+            <p class="section-copy powerups-title">Powerups</p>
+            <div id="setting-powerups" class="settings-grid"></div>
+            <div id="setting-powerups-display" class="settings-readonly-grid"></div>
+        </section>
+
+        <div class="teams-head">
+            <h2 class="teams-title">Teams</h2>
+            <button id="start-game-button" class="start-btn" type="button" hidden>Start game</button>
+        </div>
+
+        <div class="roster-grid">
+            <article class="team-card" data-team="1">
+                <div class="team-header">
+                    <h3 id="team1-name" class="team-name">Loading...</h3>
+                    <span id="team1-count" class="team-count">0 players</span>
+                </div>
+                <select id="team1-country" class="country-select" hidden></select>
+                <div id="team1-players" class="player-list"></div>
+                <button id="team1-join" class="team-join" type="button">Join this team</button>
+            </article>
+
+            <article class="team-card" data-team="2">
+                <div class="team-header">
+                    <h3 id="team2-name" class="team-name">Loading...</h3>
+                    <span id="team2-count" class="team-count">0 players</span>
+                </div>
+                <select id="team2-country" class="country-select" hidden></select>
+                <div id="team2-players" class="player-list"></div>
+                <button id="team2-join" class="team-join" type="button">Join this team</button>
+            </article>
+
+            <article class="team-card spectator-card" id="spectator-card">
+                <div class="team-header">
+                    <h3 class="team-name">Spectators</h3>
+                    <span id="spectators-count" class="team-count">0 spectators</span>
+                </div>
+                <div id="spectator-list" class="player-list"></div>
+                <button id="spectator-join" class="team-join" type="button">Spectate</button>
+            </article>
+        </div>
+
+        <section id="unassigned-section" class="unassigned-card" hidden>
+            <p class="section-copy">Not on a team yet</p>
+            <div id="unassigned-players" class="player-list"></div>
+        </section>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script src="/javascript/pregame.js" defer></script>

@@ -1,0 +1,9 @@
+# Keep the build context small; the Dockerfile only COPYs package files & src.
+node_modules
+.git
+.github
+.wrangler
+docs
+test
+DEPLOYMENT.md
+README.md

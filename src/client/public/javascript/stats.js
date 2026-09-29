@@ -1,0 +1,110 @@
+// Full-time stats view. The match summary arrives via the game:ended event
+// on the pitch, which stashes it in sessionStorage before navigating here —
+// so a refresh (or arriving with no match played) falls back to home.
+//
+// Uses the shared `socket` and `username` globals from socket.js and the kit
+// helpers from kits.js.
+(function () {
+    const raw = sessionStorage.getItem("matchStats");
+    if (raw == null) {
+        navigateTo("/home");
+        return;
+    }
+    const summary = JSON.parse(raw);
+
+    const finalScore = document.getElementById("final-score");
+    const winnerLine = document.getElementById("winner-line");
+    const myStatsSection = document.getElementById("my-stats-section");
+    const bootList = document.getElementById("boot-list");
+    const homeButton = document.getElementById("home-button");
+
+    const kits = resolveKits(summary.teamNames.home, summary.teamNames.away);
+    const teamColor = {
+        home: readableKitColor(kits.home),
+        away: readableKitColor(kits.away),
+    };
+
+    // Final score, team names in their kit colours.
+    finalScore.innerHTML = "";
+    const homeSpan = document.createElement("span");
+    homeSpan.textContent = `${summary.teamNames.home} ${summary.score.home}`;
+    homeSpan.style.color = teamColor.home;
+    const dash = document.createElement("span");
+    dash.textContent = "-";
+    const awaySpan = document.createElement("span");
+    awaySpan.textContent = `${summary.score.away} ${summary.teamNames.away}`;
+    awaySpan.style.color = teamColor.away;
+    finalScore.append(homeSpan, dash, awaySpan);
+
+    winnerLine.textContent =
+        summary.winner === "draw"
+            ? "It's a draw!"
+            : `${summary.teamNames[summary.winner]} win the match!`;
+
+    // Full-time whistle (no-ops if the file is blocked/missing).
+    if (typeof playSound === "function") {
+        playSound("endgame");
+    }
+
+    // Your detailed stats.
+    const mine = summary.stats.find((entry) => entry.username === username);
+    if (mine) {
+        document.getElementById("stat-touches").textContent = mine.touches;
+        document.getElementById("stat-passes").textContent = mine.passes;
+        document.getElementById("stat-shots").textContent = mine.shots;
+        document.getElementById("stat-goals").textContent = mine.goals;
+    } else {
+        myStatsSection.hidden = true; // spectator
+    }
+
+    // Golden boot race: everyone, top scorer first.
+    const ranked = [...summary.stats].sort(
+        (a, b) => b.goals - a.goals || b.shots - a.shots || a.username.localeCompare(b.username)
+    );
+    const maxGoals = Math.max(1, ...ranked.map((entry) => entry.goals));
+
+    bootList.innerHTML = "";
+    ranked.forEach((entry, index) => {
+        const row = document.createElement("div");
+        row.className = "boot-row";
+
+        const rank = document.createElement("span");
+        rank.className = "boot-rank";
+        rank.textContent = index === 0 && entry.goals > 0 ? "👢" : `${index + 1}.`;
+
+        const player = document.createElement("div");
+        player.className = "boot-player";
+        const name = document.createElement("div");
+        name.className = "boot-name";
+        name.textContent = entry.username;
+        name.style.color = teamColor[entry.team] ?? "#fff";
+        if (entry.username === username) {
+            const you = document.createElement("span");
+            you.className = "you-tag";
+            you.textContent = " (you)";
+            name.append(you);
+        }
+        const bar = document.createElement("div");
+        bar.className = "boot-bar";
+        const fill = document.createElement("div");
+        fill.className = "boot-bar-fill";
+        fill.style.width = `${(entry.goals / maxGoals) * 100}%`;
+        fill.style.background = teamColor[entry.team] ?? "#fff";
+        bar.append(fill);
+        player.append(name, bar);
+
+        const goals = document.createElement("span");
+        goals.className = "boot-goals";
+        goals.textContent = entry.goals;
+
+        row.append(rank, player, goals);
+        bootList.append(row);
+    });
+
+    // The match is done: leave the room and head home.
+    homeButton.addEventListener("click", () => {
+        socket.emit("room:leave", null);
+        sessionStorage.removeItem("matchStats");
+        navigateTo("/home");
+    });
+})();

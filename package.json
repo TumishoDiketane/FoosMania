@@ -1,0 +1,33 @@
+{
+  "name": "table-soccer-group-2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server/index.js",
+  "scripts": {
+    "start": "node src/server/index.js",
+    "dev": "nodemon src/server/index.js",
+    "check": "git ls-files '*.js' | xargs -n1 node --check",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bbd-vac-week-2026/table-soccer-group-2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.21.2",
+    "flag-icons": "^7.5.0",
+    "socket.io": "^4.8.1"
+  },
+  "bugs": {
+    "url": "https://github.com/bbd-vac-week-2026/table-soccer-group-2/issues"
+  },
+  "homepage": "https://github.com/bbd-vac-week-2026/table-soccer-group-2#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "socket.io-client": "^4.8.3"
+  }
+}
