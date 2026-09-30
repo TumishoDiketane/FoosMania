@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 import { createRoomModel } from '../models/room.js';
 import { stopGame } from './game-handler.js';
-import { worldCupCountries, POWERUPS } from '../utils/constants.js';
+import { planets, POWERUPS } from '../utils/constants.js';
 
 const rooms = new Map();
 
@@ -54,15 +54,15 @@ function generateRoomCode() {
 export function createRoom(payload) {
 	const room = createRoomModel(payload);
 
-	const homeTeamNameIndex = Math.floor(Math.random() * worldCupCountries.length);
-	let awayTeamNameIndex = Math.floor(Math.random() * worldCupCountries.length);
+	const homeTeamNameIndex = Math.floor(Math.random() * planets.length);
+	let awayTeamNameIndex = Math.floor(Math.random() * planets.length);
 
 	while (awayTeamNameIndex === homeTeamNameIndex) {
-		awayTeamNameIndex = Math.floor(Math.random() * worldCupCountries.length);
+		awayTeamNameIndex = Math.floor(Math.random() * planets.length);
 	}
 
-	room.homeTeamName = worldCupCountries[homeTeamNameIndex];
-	room.awayTeamName = worldCupCountries[awayTeamNameIndex];
+	room.homeTeamName = planets[homeTeamNameIndex];
+	room.awayTeamName = planets[awayTeamNameIndex];
 
 	room.code = generateRoomCode();
 	rooms.set(room.id, room);
@@ -132,13 +132,13 @@ export function updateRoomSettings(room, incoming) {
 	return changed;
 }
 
-// Host-picked team country; must be one of the known kit countries.
-export function setTeamName(room, team, country) {
-	if (!['home', 'away'].includes(team) || !worldCupCountries.includes(country)) {
+// Host-picked team planet; must be one of the known kit names.
+export function setTeamName(room, team, planet) {
+	if (!['home', 'away'].includes(team) || !planets.includes(planet)) {
 		return false;
 	}
 
-	room[team === 'home' ? 'homeTeamName' : 'awayTeamName'] = country;
+	room[team === 'home' ? 'homeTeamName' : 'awayTeamName'] = planet;
 	return true;
 }
 

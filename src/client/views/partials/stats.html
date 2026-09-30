@@ -82,7 +82,7 @@
     }
 
     .stats-shell .panel {
-        background: linear-gradient(165deg, rgba(30, 34, 39, 0.92), rgba(18, 21, 26, 0.92));
+        background: linear-gradient(165deg, rgba(30, 34, 39, 0.76), rgba(18, 21, 26, 0.76));
         border: 1px solid var(--panel-border);
         border-radius: 14px;
         padding: 18px 20px;
@@ -183,7 +183,7 @@
         text-align: right;
     }
 
-    /* Shared button language: the blue accent gradient used across the app. */
+    /* Return navigation uses the shared secondary button treatment. */
     .stats-shell #home-button {
         align-self: center;
         display: inline-flex;
@@ -199,20 +199,24 @@
         text-transform: uppercase;
         color: #fff;
         border-radius: 10px;
-        background: linear-gradient(180deg, var(--accent-hi), var(--accent) 46%, var(--accent-lo));
-        box-shadow:
-            0 12px 24px -12px rgba(46, 155, 240, 0.8),
-            inset 0 1px 0 rgba(255, 255, 255, 0.4),
-            inset 0 -2px 0 rgba(0, 0, 0, 0.2);
-        transition: transform 90ms ease, filter 130ms ease;
+        background: var(--button-secondary);
+        box-shadow: none;
+        transition: transform 90ms ease, background 130ms ease;
     }
 
     .stats-shell #home-button:hover {
-        filter: brightness(1.06);
+        background: var(--button-secondary-hover);
+        box-shadow: 0 0 0 3px rgba(101, 230, 226, 0.16);
     }
 
     .stats-shell #home-button:active {
+        background: var(--button-secondary-hover);
         transform: translateY(1px);
+    }
+
+    .stats-shell #home-button:focus-visible {
+        outline: 3px solid var(--button-selected);
+        outline-offset: 3px;
     }
 
     @media (orientation: landscape), (min-width: 720px) {

@@ -49,7 +49,7 @@
         max-width: 420px; /* Mobile panel width */
         margin: auto;     /* Centered vertically and horizontally */
         
-        background: linear-gradient(165deg, rgba(30, 34, 39, 0.95), rgba(18, 21, 26, 0.95));
+        background: linear-gradient(165deg, rgba(30, 34, 39, 0.76), rgba(18, 21, 26, 0.76));
         border: 1px solid var(--panel-border);
         border-radius: 16px;
         padding: 28px 24px;
@@ -107,20 +107,53 @@
         font-weight: 800;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: #fff;
+        color: var(--button-secondary);
         text-decoration: none;
         border-radius: 10px;
-        background: linear-gradient(180deg, var(--accent-hi), var(--accent) 46%, var(--accent-lo));
+        background: var(--button-primary);
         box-shadow:
-            0 12px 24px -12px rgba(46, 155, 240, 0.8),
+            0 12px 24px -12px rgba(255, 128, 102, 0.55),
             inset 0 1px 0 rgba(255, 255, 255, 0.4),
             inset 0 -2px 0 rgba(0, 0, 0, 0.2);
-        transition: transform 90ms ease, filter 130ms ease;
+        transition: transform 90ms ease, background 130ms ease, color 130ms ease;
         width: 100%; /* Full width on mobile */
     }
 
-    .home-shell .action-btn:hover { filter: brightness(1.06); }
-    .home-shell .action-btn:active { transform: translateY(1px); }
+    .home-shell .action-btn:hover {
+        background: var(--button-primary-hover);
+        box-shadow: 0 0 0 3px rgba(255, 128, 102, 0.18), 0 14px 32px rgba(255, 128, 102, 0.32);
+    }
+    .home-shell .action-btn:active {
+        color: #fff;
+        background: var(--button-primary-pressed);
+        transform: translateY(1px);
+    }
+
+    .home-shell .join-btn {
+        color: #fff;
+        background: var(--button-secondary);
+        box-shadow: none;
+    }
+
+    .home-shell .join-btn:hover,
+    .home-shell .join-btn:active {
+        background: var(--button-secondary-hover);
+        box-shadow: 0 0 0 3px rgba(101, 230, 226, 0.16);
+    }
+
+    .home-shell .action-btn:focus-visible {
+        outline: 3px solid var(--button-selected);
+        outline-offset: 3px;
+    }
+
+    .home-shell .action-btn:disabled,
+    .home-shell .action-btn:disabled:hover,
+    .home-shell .action-btn:disabled:active {
+        color: #fff;
+        background: var(--button-disabled);
+        box-shadow: none;
+        cursor: not-allowed;
+    }
 
     /* ---- Sections & Inputs --------------------------------------------- */
 
@@ -268,7 +301,7 @@
             <div class="brand">
                 <div class="brand-text">
                     <p class="kicker">Create/Join A Room</p>
-                    <h1 class="room-title">FOOFA Street</h1>
+                    <h1 class="room-title">FOOS MANIA</h1>
                 </div>
             </div>
             <a class="action-btn create-btn nav-link" href="/create-room">Create room</a>

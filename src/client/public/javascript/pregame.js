@@ -1,6 +1,6 @@
 // Pregame (waiting room): join the room's socket channel, render the live
 // roster for each team, let the host start the game, tune match settings
-// (goals, time limit, powerups, team countries) and manage players
+// (goals, time limit, powerups, team planets) and manage players
 // (kick / move team). Everyone else sees the settings read-only. Spectators
 // (joined a full room) watch the lobby without team controls.
 // Gameplay itself (pitch/player views) is out of scope here.
@@ -38,7 +38,7 @@
             count: document.getElementById("team1-count"),
             players: document.getElementById("team1-players"),
             join: document.getElementById("team1-join"),
-            country: document.getElementById("team1-country"),
+            planet: document.getElementById("team1-country"),
         },
         'away': {
             card: document.querySelector('.team-card[data-team="2"]'),
@@ -46,7 +46,7 @@
             count: document.getElementById("team2-count"),
             players: document.getElementById("team2-players"),
             join: document.getElementById("team2-join"),
-            country: document.getElementById("team2-country"),
+            planet: document.getElementById("team2-country"),
         },
     };
 
@@ -55,12 +55,12 @@
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
-    // Tint a team card with the selected country's two kit colours: a
+    // Tint a team card with the selected planet's two kit colours: a
     // two-colour gradient for the top strip and the soft fills, and the
     // lighter colour for text. Falls back to the CSS red/blue when the
-    // country has no kit entry.
-    function applyTeamColors(card, country) {
-        const kit = KITS[country];
+    // planet has no kit entry.
+    function applyTeamColors(card, planet) {
+        const kit = KITS[planet];
         if (!kit) {
             for (const prop of ["--team-grad", "--team-soft", "--team-border", "--team-text"]) {
                 card.style.removeProperty(prop);
@@ -75,14 +75,14 @@
         card.style.setProperty("--team-text", readableKitColor(kit));
     }
 
-    // Country pickers: options come from the kit table (kits.js), the same
+    // Planet pickers: options come from the kit table (kits.js), the same
     // names the server validates against.
     for (const teamId of ['home', 'away']) {
-        const select = teamEls[teamId].country;
-        for (const country of Object.keys(KITS)) {
+        const select = teamEls[teamId].planet;
+        for (const planet of Object.keys(KITS)) {
             const option = document.createElement("option");
-            option.value = country;
-            option.textContent = country;
+            option.value = planet;
+            option.textContent = planet;
             select.append(option);
         }
         select.addEventListener("change", () => {
@@ -318,11 +318,11 @@
             els.count.textContent = `${entries.length} player${entries.length === 1 ? "" : "s"}`;
             applyTeamColors(els.card, room[`${teamId}TeamName`]);
 
-            // The host picks countries from the dropdown; everyone else just
+            // The host picks planets from the dropdown; everyone else just
             // reads the heading.
-            els.country.hidden = !isHost;
-            if (isHost && document.activeElement !== els.country) {
-                els.country.value = room[`${teamId}TeamName`];
+            els.planet.hidden = !isHost;
+            if (isHost && document.activeElement !== els.planet) {
+                els.planet.value = room[`${teamId}TeamName`];
             }
 
             renderPlayerList(els.players, entries, { isHost, team: teamId });

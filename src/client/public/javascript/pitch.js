@@ -50,18 +50,6 @@
     const SMOOTH_SNAP = 80; // gap beyond this = teleport (goal reset, rejoin)
     const TACKLE_SOUND_CHANCE = 0.3;
 
-    // ISO 3166-1 alpha-2 codes for flag-icons library
-    const COUNTRY_ISO = {
-        "Argentina": "ar", "Australia": "au", "Belgium": "be", "Brazil": "br",
-        "Cameroon": "cm", "Canada": "ca", "Croatia": "hr", "Denmark": "dk",
-        "England": "gb-eng", "France": "fr", "Germany": "de", "Ghana": "gh",
-        "Iran": "ir", "Japan": "jp", "Mexico": "mx", "Morocco": "ma",
-        "Netherlands": "nl", "Poland": "pl", "Portugal": "pt", "Qatar": "qa",
-        "Senegal": "sn", "Serbia": "rs", "South Korea": "kr", "Spain": "es",
-        "Switzerland": "ch", "Tunisia": "tn", "Uruguay": "uy", "USA": "us",
-        "Saudi Arabia": "sa", "Ecuador": "ec", "Costa Rica": "cr", "Wales": "gb-wls", "South Africa": "za"
-    };
-
     let constants = null; // sent by the server in the game:join ack
     let teamNames = { home: "Home", away: "Away" };
     let kits = null; // resolved 2-colour shirt designs, one per team
@@ -214,32 +202,27 @@
         updateFlip();
     }
 
-    // Landscape (desktop / spectators) gets the stadium chrome; the flag panel
-    // on each side is filled with the team's national flags via flag-icons.
+    // Landscape (desktop / spectators) gets the stadium chrome; each side panel
+    // is filled with the team's alternating kit colours.
     // Portrait mobile players see the bare pitch (CSS hides the chrome below the media query).
     function setupStadium() {
         if (!kits) return;
         container.classList.add("in-stadium");
 
-        function fillFlagPanel(el, countryName) {
+        function fillKitPanel(el, kit) {
             el.innerHTML = "";
-            const iso = COUNTRY_ISO[countryName];
-            // Show 4 stacked flag tiles to fill the vertical strip
             for (let i = 0; i < 4; i++) {
-                const fi = document.createElement("span");
-                if (iso) {
-                    fi.className = `fi fi-${iso}`;
-                } else {
-                    fi.style.background = kits[countryName === teamNames.home ? "home" : "away"].colors[0];
-                }
-                el.append(fi);
+                const tile = document.createElement("span");
+                tile.className = "team-kit-tile";
+                tile.style.background = kit.colors[i % kit.colors.length];
+                el.append(tile);
             }
         }
 
-        const flagHome = document.getElementById("flag-home");
-        const flagAway = document.getElementById("flag-away");
-        if (flagHome) fillFlagPanel(flagHome, teamNames.home);
-        if (flagAway) fillFlagPanel(flagAway, teamNames.away);
+        const homeKitPanel = document.getElementById("home-kit-panel");
+        const awayKitPanel = document.getElementById("away-kit-panel");
+        if (homeKitPanel) fillKitPanel(homeKitPanel, kits.home);
+        if (awayKitPanel) fillKitPanel(awayKitPanel, kits.away);
     }
 
     function updateClock(s) {
