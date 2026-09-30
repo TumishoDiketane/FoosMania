@@ -46,7 +46,7 @@
         max-width: 420px;
         margin: auto;
         
-        background: linear-gradient(165deg, rgba(30, 34, 39, 0.95), rgba(18, 21, 26, 0.95));
+        background: linear-gradient(165deg, rgba(30, 34, 39, 0.76), rgba(18, 21, 26, 0.76));
         border: 1px solid var(--panel-border);
         border-radius: 16px;
         padding: 28px 24px;
@@ -172,31 +172,51 @@
         font-weight: 800;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: #fff;
+        color: var(--button-secondary);
         text-decoration: none;
         border-radius: 10px;
-        background: linear-gradient(180deg, var(--accent-hi), var(--accent) 46%, var(--accent-lo));
+        background: var(--button-primary);
         box-shadow:
-            0 12px 24px -12px rgba(46, 155, 240, 0.8),
+            0 12px 24px -12px rgba(255, 128, 102, 0.55),
             inset 0 1px 0 rgba(255, 255, 255, 0.4),
             inset 0 -2px 0 rgba(0, 0, 0, 0.2);
-        transition: transform 90ms ease, filter 130ms ease;
+        transition: transform 90ms ease, background 130ms ease, color 130ms ease;
         width: 100%;
     }
 
-    .home-shell .action-btn:hover { filter: brightness(1.06); }
-    .home-shell .action-btn:active { transform: translateY(1px); }
+    .home-shell .action-btn:hover {
+        background: var(--button-primary-hover);
+        box-shadow: 0 0 0 3px rgba(255, 128, 102, 0.18), 0 14px 32px rgba(255, 128, 102, 0.32);
+    }
+    .home-shell .action-btn:active {
+        color: #fff;
+        background: var(--button-primary-pressed);
+        transform: translateY(1px);
+    }
 
     .home-shell .btn-secondary {
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        background: var(--button-secondary);
+        border: 1px solid var(--button-secondary);
         box-shadow: none;
-        color: var(--ink-dim);
     }
 
     .home-shell .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--ink);
+        background: var(--button-secondary-hover);
+        border-color: var(--button-secondary-hover);
+        box-shadow: 0 0 0 3px rgba(101, 230, 226, 0.16);
+    }
+
+    .home-shell .btn-secondary:active {
+        background: var(--button-secondary-hover);
+        border-color: var(--button-secondary-hover);
+        box-shadow: 0 0 0 3px rgba(101, 230, 226, 0.16);
+    }
+
+    .home-shell .action-btn:focus-visible,
+    .home-shell .toggle-btn:focus-visible {
+        outline: 3px solid var(--button-selected);
+        outline-offset: 3px;
     }
 
     .home-shell .form-hint {
@@ -256,10 +276,10 @@
     }
 
     .home-shell .toggle-btn.is-active {
-        color: #fff;
-        border-color: var(--accent);
-        background: rgba(46, 155, 240, 0.18);
-        box-shadow: 0 0 0 3px rgba(46, 155, 240, 0.18);
+        color: var(--button-selected);
+        border-color: var(--button-selected);
+        background: rgba(101, 230, 226, 0.16);
+        box-shadow: 0 0 0 3px rgba(101, 230, 226, 0.16);
     }
 
     .home-shell .description {
@@ -273,7 +293,7 @@
         <header class="home-head">
             <div class="brand">
                 <div class="brand-text">
-                    <p class="kicker">FOOFA Street</p>
+                    <p class="kicker">FOOS MANIA</p>
                     <h1 class="room-title">Create Room</h1>
                 </div>
             </div>

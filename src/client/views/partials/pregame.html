@@ -13,8 +13,8 @@
        Layout follows the OG waiting room: brand + Leave room top bar, a wide
        host / session-code panel, then Teams (Start game on the right) with the
        two team cards and the unassigned strip below. Spread on desktop,
-       stacked on mobile. Team cards are tinted with the two kit colours of
-       the country currently selected for that team (kits.js), so the lobby
+    stacked on mobile. Team cards are tinted with the two kit colours of
+    the planet currently selected for that team (kits.js), so the lobby
        matches the shirts on the pitch.
        ===================================================================== */
 
@@ -128,14 +128,15 @@
         text-decoration: none;
         cursor: pointer;
         border-radius: 9px;
-        background: rgba(255, 255, 255, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: var(--button-secondary);
+        border: 1px solid var(--button-secondary);
         transition: background 130ms ease, border-color 130ms ease, transform 90ms ease;
     }
 
     .pregame-shell .ghost-btn:hover {
-        background: rgba(255, 255, 255, 0.10);
-        border-color: rgba(255, 255, 255, 0.28);
+        background: var(--button-secondary-hover);
+        border-color: var(--button-secondary-hover);
+        box-shadow: 0 0 0 3px rgba(101, 230, 226, 0.16);
     }
 
     .pregame-shell .ghost-btn:active {
@@ -143,7 +144,7 @@
     }
 
     .pregame-shell .ghost-btn:focus-visible {
-        outline: 3px solid rgba(87, 178, 255, 0.6);
+        outline: 3px solid var(--button-selected);
         outline-offset: 2px;
     }
 
@@ -161,25 +162,28 @@
         text-transform: uppercase;
         color: #fff;
         border-radius: 10px;
-        background: linear-gradient(180deg, var(--accent-hi), var(--accent) 46%, var(--accent-lo));
+        background: var(--button-primary);
         box-shadow:
-            0 12px 24px -12px rgba(46, 155, 240, 0.8),
+            0 12px 24px -12px rgba(255, 128, 102, 0.55),
             inset 0 1px 0 rgba(255, 255, 255, 0.4),
             inset 0 -2px 0 rgba(0, 0, 0, 0.2);
-        transition: transform 90ms ease, filter 130ms ease;
+        transition: transform 90ms ease, background 130ms ease, color 130ms ease;
     }
 
     .pregame-shell .start-btn:hover {
-        filter: brightness(1.06);
+        background: var(--button-primary-hover);
+        box-shadow: 0 0 0 3px rgba(255, 128, 102, 0.18), 0 14px 32px rgba(255, 128, 102, 0.32);
     }
 
     .pregame-shell .start-btn:active {
+        color: #fff;
+        background: var(--button-primary-pressed);
         transform: translateY(1px);
     }
 
     .pregame-shell .start-btn:disabled {
-        background: #2b3037;
-        color: var(--ink-mute);
+        background: var(--button-disabled);
+        color: #fff;
         cursor: default;
         box-shadow: none;
         filter: none;
@@ -187,14 +191,14 @@
     }
 
     .pregame-shell .start-btn:focus-visible {
-        outline: 3px solid rgba(87, 178, 255, 0.7);
+        outline: 3px solid var(--button-selected);
         outline-offset: 3px;
     }
 
     /* ---- Host / session panel ------------------------------------------ */
 
     .pregame-shell .host-panel {
-        background: linear-gradient(165deg, rgba(30, 34, 39, 0.92), rgba(18, 21, 26, 0.92));
+        background: linear-gradient(165deg, rgba(30, 34, 39, 0.76), rgba(18, 21, 26, 0.76));
         border: 1px solid var(--panel-border);
         border-radius: 14px;
         padding: 20px 22px;
@@ -283,8 +287,8 @@
         text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
     }
 
-    /* ---- Team cards ------------------------------------------------------
-       Tinted with the selected country's two kit colours: pregame.js sets
+     /* ---- Team cards ------------------------------------------------------
+         Tinted with the selected planet's two kit colours: pregame.js sets
        --team-grad / --team-soft / --team-border / --team-text per card from
        kits.js. The vars below are only the pre-kit / spectator fallback. --- */
 
@@ -318,7 +322,7 @@
     .pregame-shell .team-card {
         position: relative;
         overflow: hidden;
-        background: linear-gradient(165deg, #1d2126, #14171b);
+        background: linear-gradient(165deg, rgba(29, 33, 38, 0.82), rgba(20, 23, 27, 0.82));
         border: 1px solid var(--panel-border);
         border-radius: 12px;
         padding: 18px 16px;
@@ -405,14 +409,15 @@
         text-transform: uppercase;
         color: var(--ink);
         border-radius: 9px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: var(--button-secondary);
+        border: 1px solid var(--button-secondary);
         transition: background 130ms ease, border-color 130ms ease, transform 90ms ease;
     }
 
     .pregame-shell .team-join:hover {
-        background: rgba(255, 255, 255, 0.10);
-        border-color: rgba(255, 255, 255, 0.28);
+        background: var(--button-secondary-hover);
+        border-color: var(--button-secondary-hover);
+        box-shadow: 0 0 0 3px rgba(101, 230, 226, 0.16);
     }
 
     .pregame-shell .team-join:active {
@@ -420,7 +425,7 @@
     }
 
     .pregame-shell .team-join:focus-visible {
-        outline: 3px solid rgba(87, 178, 255, 0.6);
+        outline: 3px solid var(--button-selected);
         outline-offset: 2px;
     }
 
@@ -428,15 +433,16 @@
     .pregame-shell .team-join:disabled {
         cursor: default;
         transform: none;
-        background: var(--team-soft);
-        border-color: var(--team-border);
-        color: var(--team-text);
+        background: rgba(101, 230, 226, 0.16);
+        border-color: var(--button-selected);
+        color: var(--button-selected);
+        box-shadow: 0 0 0 2px rgba(101, 230, 226, 0.14);
     }
 
     /* ---- Unassigned strip ---------------------------------------------- */
 
     .pregame-shell .unassigned-card {
-        background: linear-gradient(165deg, rgba(30, 34, 39, 0.9), rgba(18, 21, 26, 0.9));
+        background: linear-gradient(165deg, rgba(30, 34, 39, 0.76), rgba(18, 21, 26, 0.76));
         border: 1px solid var(--panel-border);
         border-radius: 14px;
         padding: 18px 20px;
@@ -666,7 +672,7 @@
         margin-top: 2px;
     }
 
-    /* ---- Country picker + host roster controls -------------------------- */
+    /* ---- Planet picker + host roster controls --------------------------- */
 
     .pregame-shell .country-select {
         font: inherit;
@@ -695,21 +701,32 @@
         font: inherit;
         font-size: 11px;
         font-weight: 700;
-        color: var(--ink-dim);
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.16);
+        color: #fff;
+        background: var(--button-secondary);
+        border: 1px solid var(--button-secondary);
         border-radius: 6px;
         padding: 4px 8px;
     }
 
     .pregame-shell .row-btn:hover {
-        color: var(--ink);
-        background: rgba(255, 255, 255, 0.12);
+        background: var(--button-secondary-hover);
+        border-color: var(--button-secondary-hover);
+        box-shadow: 0 0 0 2px rgba(101, 230, 226, 0.14);
     }
 
     .pregame-shell .row-btn.kick {
-        color: #f2a69c;
-        border-color: rgba(231, 76, 60, 0.42);
+        color: #fff;
+        background: var(--button-danger);
+        border-color: var(--button-danger);
+    }
+
+    .pregame-shell .row-btn.kick:hover {
+        filter: brightness(1.06);
+    }
+
+    .pregame-shell .row-btn:focus-visible {
+        outline: 2px solid var(--button-selected);
+        outline-offset: 2px;
     }
 
     @media (orientation: landscape) {

@@ -43,11 +43,22 @@
 
     .pitch-shell #enable-motion {
         font-size: 1.1rem;
-        background: #ff0;
-        color: #222;
-        border: none;
+        background: #172044;
+        color: #fff;
+        border: 1px solid #29346d;
+        border-radius: 6px;
         padding: 10px 20px;
         margin-bottom: 10px;
+        cursor: pointer;
+    }
+
+    .pitch-shell #enable-motion:hover {
+        background: #29346d;
+    }
+
+    .pitch-shell #enable-motion:focus-visible {
+        outline: 3px solid #65e6e2;
+        outline-offset: 3px;
     }
 
     .pitch-shell #pitch-container {
@@ -144,8 +155,8 @@
             background-size: 46px 13px, 38px 11px, 52px 15px, 44px 12px, auto;
         }
 
-        /* designated flag region per side, filled with stacked flag icons */
-        .pitch-shell .stadium.flag {
+        /* Team kit colors fill the vertical panel on each side. */
+        .pitch-shell .stadium.kit-panel {
             top: 42px;
             bottom: 24px;
             width: 56px;
@@ -156,15 +167,15 @@
             flex-direction: column;
         }
 
-        .pitch-shell .stadium.flag.left {
+        .pitch-shell .stadium.kit-panel.left {
             left: 4px;
         }
 
-        .pitch-shell .stadium.flag.right {
+        .pitch-shell .stadium.kit-panel.right {
             right: 4px;
         }
 
-        .pitch-shell .stadium.flag .fi {
+        .pitch-shell .stadium.kit-panel .team-kit-tile {
             flex: 1;
             width: 100%;
             background-size: cover;
@@ -309,8 +320,8 @@
     <button id="enable-motion" hidden>Enable motion controls</button>
     <div id="pitch-container">
         <div class="stadium crowd"></div>
-        <div class="stadium flag left" id="flag-home"></div>
-        <div class="stadium flag right" id="flag-away"></div>
+        <div class="stadium kit-panel left" id="home-kit-panel"></div>
+        <div class="stadium kit-panel right" id="away-kit-panel"></div>
         <canvas id="pitch" width="800" height="500"></canvas>
         <div id="flick" hidden>FLICK!</div>
         <div id="goal-overlay"><span class="goal-text">GOAL!!!</span></div>

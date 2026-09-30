@@ -107,15 +107,16 @@ out-of-range fields are ignored. Broadcasts `room:update` on any change.
 
 **serverbound**
 
-Host-only, lobby only. Set a team's country (drives kit + flags). Must be one
-of the known kit countries. Broadcasts `room:update` on success.
+Host-only, lobby only. Set a team's planet (drives kit + stadium colors). The
+existing `country` payload key is retained for compatibility and must contain
+one of the known planet names. Broadcasts `room:update` on success.
 
 ### Data
 
 ```json
 {
     "team": "home|away",
-    "country": "Japan"
+    "country": "Earth"
 }
 ```
 
