@@ -5,10 +5,10 @@
        ===================================================================== */
 
     .home-shell {
-        --panel-border: rgba(255, 255, 255, 0.09);
-        --ink:          #f3f5f8;
-        --ink-dim:      #a8afb8;
-        --ink-mute:     #6c7079;
+        --panel-border: rgba(23, 32, 68, 0.2);
+        --ink:          #172044;
+        --ink-dim:      #35466e;
+        --ink-mute:     #586987;
         --accent:       #2e9bf0;
         --accent-hi:    #57b2ff;
         --accent-lo:    #1a7bd2;
@@ -49,7 +49,7 @@
         max-width: 420px; /* Mobile panel width */
         margin: auto;     /* Centered vertically and horizontally */
         
-        background: linear-gradient(165deg, rgba(30, 34, 39, 0.76), rgba(18, 21, 26, 0.76));
+        background: linear-gradient(165deg, rgba(198, 232, 247, 0.68), rgba(159, 211, 237, 0.66));
         border: 1px solid var(--panel-border);
         border-radius: 16px;
         padding: 28px 24px;
@@ -190,7 +190,8 @@
         padding: 13px 16px;
         font: inherit;
         font-size: 16px; /* Prevents iOS zoom */
-        color: var(--ink);
+        color: #ffffff;
+        caret-color: #ffffff;
         background: var(--field-bg);
         border: 2px solid #23272c;
         border-radius: 8px;
@@ -198,7 +199,7 @@
         transition: border-color 130ms ease, box-shadow 130ms ease;
     }
 
-    .home-shell .join-group input::placeholder { color: var(--ink-mute); }
+    .home-shell .join-group input::placeholder { color: #a8b4cc; }
     
     .home-shell .join-group input:focus {
         border-color: var(--accent);
@@ -214,14 +215,14 @@
     }
 
     .home-shell .room-grid .room-card {
-        background: linear-gradient(165deg, #363c44, #2b3037);
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: linear-gradient(165deg, rgba(198, 232, 247, 0.7), rgba(159, 211, 237, 0.68));
+        border: 1px solid rgba(23, 32, 68, 0.2);
     }
 
     .home-shell .room-card .pill {
-        background: #525a67;
+        background: rgba(23, 32, 68, 0.1);
         color: var(--ink-dim);
-        border: 1px solid rgba(255, 255, 255, 0.10);
+        border: 1px solid rgba(23, 32, 68, 0.14);
     }
 
     .home-shell .empty-state {
