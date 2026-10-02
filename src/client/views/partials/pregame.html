@@ -19,17 +19,17 @@
        ===================================================================== */
 
     .pregame-shell {
-        --panel-hi: #23272c;
-        --panel-lo: #14171b;
-        --ink: #f3f5f8;
-        --ink-dim: #a8afb8;
-        --ink-mute: #6c7079;
+        --panel-hi: #c6e7f6;
+        --panel-lo: #9fd3ed;
+        --ink: #172044;
+        --ink-dim: #35466e;
+        --ink-mute: #586987;
         --accent: #2e9bf0;
         --accent-hi: #57b2ff;
         --accent-lo: #1a7bd2;
         --field-bg: #0f1318;
-        --panel-border: rgba(255, 255, 255, 0.09);
-        --line: rgba(255, 255, 255, 0.10);
+        --panel-border: rgba(23, 32, 68, 0.2);
+        --line: rgba(23, 32, 68, 0.16);
 
         position: fixed;
         inset: 0;
@@ -97,7 +97,7 @@
         font-weight: 700;
         letter-spacing: 0.22em;
         text-transform: uppercase;
-        color: var(--ink-dim);
+        color: #eaf6ff;
     }
 
     .pregame-shell .room-title {
@@ -107,9 +107,9 @@
         font-weight: 800;
         letter-spacing: 0.02em;
         text-transform: uppercase;
-        color: var(--ink);
+        color: #ffffff;
         word-break: break-word;
-        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
     }
 
     /* ---- Buttons ------------------------------------------------------- */
@@ -124,7 +124,7 @@
         font-size: 13px;
         font-weight: 700;
         letter-spacing: 0.04em;
-        color: var(--ink);
+        color: #ffffff;
         text-decoration: none;
         cursor: pointer;
         border-radius: 9px;
@@ -160,7 +160,7 @@
         font-weight: 800;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: #fff;
+        color: var(--button-secondary);
         border-radius: 10px;
         background: var(--button-primary);
         box-shadow:
@@ -198,7 +198,7 @@
     /* ---- Host / session panel ------------------------------------------ */
 
     .pregame-shell .host-panel {
-        background: linear-gradient(165deg, rgba(30, 34, 39, 0.76), rgba(18, 21, 26, 0.76));
+        background: linear-gradient(165deg, rgba(198, 232, 247, 0.68), rgba(159, 211, 237, 0.66));
         border: 1px solid var(--panel-border);
         border-radius: 14px;
         padding: 20px 22px;
@@ -219,9 +219,9 @@
         font-size: 12px;
         font-weight: 700;
         letter-spacing: 0.03em;
-        background: rgba(139, 92, 246, 0.16);
-        color: #c4b0f7;
-        border: 1px solid rgba(139, 92, 246, 0.42);
+        background: rgba(139, 92, 246, 0.12);
+        color: #49358c;
+        border: 1px solid rgba(73, 53, 140, 0.35);
         margin-bottom: 10px;
     }
 
@@ -242,7 +242,7 @@
         letter-spacing: 0.14em;
         font-size: 15px;
         font-weight: 600;
-        color: var(--ink);
+        color: #ffffff;
         background: var(--field-bg);
         border: 1px solid var(--panel-border);
         border-radius: 8px;
@@ -257,7 +257,7 @@
 
     .pregame-shell .copy-state {
         font-size: 12px;
-        color: var(--accent-hi);
+        color: #174e78;
         min-height: 1em;
     }
 
@@ -283,8 +283,8 @@
         font-size: 20px;
         font-weight: 800;
         letter-spacing: -0.01em;
-        color: var(--ink);
-        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+        color: #ffffff;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
     }
 
      /* ---- Team cards ------------------------------------------------------
@@ -322,7 +322,7 @@
     .pregame-shell .team-card {
         position: relative;
         overflow: hidden;
-        background: linear-gradient(165deg, rgba(29, 33, 38, 0.82), rgba(20, 23, 27, 0.82));
+        background: linear-gradient(165deg, rgba(198, 232, 247, 0.68), rgba(159, 211, 237, 0.66));
         border: 1px solid var(--panel-border);
         border-radius: 12px;
         padding: 18px 16px;
@@ -366,7 +366,7 @@
         letter-spacing: 0.04em;
         text-transform: uppercase;
         background: var(--team-soft);
-        color: var(--team-text);
+        color: var(--ink);
         border: 1px solid var(--team-border);
     }
 
@@ -377,8 +377,8 @@
     }
 
     .pregame-shell .player-row {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(23, 32, 68, 0.06);
+        border: 1px solid rgba(23, 32, 68, 0.12);
         border-radius: 8px;
         padding: 8px 12px;
     }
@@ -407,7 +407,7 @@
         font-weight: 800;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: var(--ink);
+        color: #ffffff;
         border-radius: 9px;
         background: var(--button-secondary);
         border: 1px solid var(--button-secondary);
@@ -433,16 +433,16 @@
     .pregame-shell .team-join:disabled {
         cursor: default;
         transform: none;
-        background: rgba(101, 230, 226, 0.16);
+        background: var(--button-selected);
         border-color: var(--button-selected);
-        color: var(--button-selected);
+        color: var(--button-secondary);
         box-shadow: 0 0 0 2px rgba(101, 230, 226, 0.14);
     }
 
     /* ---- Unassigned strip ---------------------------------------------- */
 
     .pregame-shell .unassigned-card {
-        background: linear-gradient(165deg, rgba(30, 34, 39, 0.76), rgba(18, 21, 26, 0.76));
+        background: linear-gradient(165deg, rgba(198, 232, 247, 0.68), rgba(159, 211, 237, 0.66));
         border: 1px solid var(--panel-border);
         border-radius: 14px;
         padding: 18px 20px;
@@ -553,8 +553,8 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(23, 32, 68, 0.06);
+        border: 1px solid rgba(23, 32, 68, 0.12);
         border-radius: 8px;
         padding: 8px 12px;
     }
@@ -569,7 +569,8 @@
     .pregame-shell .setting-row select {
         font: inherit;
         font-size: 14px;
-        color: var(--ink);
+        color: #ffffff;
+        caret-color: #ffffff;
         background: var(--field-bg);
         border: 1px solid var(--panel-border);
         border-radius: 6px;
@@ -635,7 +636,7 @@
         font-weight: 700;
         background: rgba(46, 155, 240, 0.12);
         border: 1px solid rgba(46, 155, 240, 0.35);
-        color: var(--accent-hi);
+        color: #174e78;
         white-space: nowrap;
     }
 
@@ -648,15 +649,15 @@
         border-radius: 999px;
         font-size: 12px;
         font-weight: 700;
-        background: rgba(255, 255, 255, 0.07);
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(23, 32, 68, 0.08);
+        border: 1px solid rgba(23, 32, 68, 0.14);
         color: var(--ink-dim);
     }
 
     .pregame-shell .powerup-pill.active {
-        background: rgba(46, 155, 240, 0.12);
-        border-color: rgba(46, 155, 240, 0.35);
-        color: var(--accent-hi);
+        background: rgba(101, 230, 226, 0.28);
+        border-color: rgba(23, 32, 68, 0.18);
+        color: var(--ink);
     }
 
     .pregame-shell .powerup-dot {
@@ -677,7 +678,8 @@
     .pregame-shell .country-select {
         font: inherit;
         font-size: 13px;
-        color: var(--ink);
+        color: #ffffff;
+        caret-color: #ffffff;
         background: var(--field-bg);
         border: 1px solid var(--panel-border);
         border-radius: 6px;

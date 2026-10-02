@@ -4,10 +4,10 @@
 
 :root {
     --bg: #f2f3f5;
-    --surface: #ffffff;
-    --border: #e0e2e7;
+    --surface: rgba(201, 233, 247, 0.68);
+    --border: #9bbfd2;
     --text: #1a1d23;
-    --muted: #6b7280;
+    --muted: #4b5871;
     --primary: #2f6fed;
     --primary-text: #ffffff;
     --primary-dark: #2559c2;
@@ -29,10 +29,10 @@
     --host-bg: #efe9fc;
     --radius: 10px;
     --auth-bg: #071123;
-    --auth-surface: rgba(7, 15, 28, 0.82);
+    --auth-surface: rgba(190, 226, 243, 0.68);
     --auth-surface-border: rgba(255, 255, 255, 0.12);
-    --auth-text: #f5fbff;
-    --auth-muted: #9db8da;
+    --auth-text: #172044;
+    --auth-muted: #405777;
     --auth-primary: #4fd0ff;
     --auth-primary-soft: rgba(79, 208, 255, 0.16);
     --auth-accent: #2af6c0;
@@ -240,8 +240,9 @@ select {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 12px 14px;
-    color: var(--text);
-    background: var(--surface);
+    color: #ffffff;
+    background: #0f1318;
+    caret-color: #ffffff;
     outline: none;
 }
 
@@ -371,7 +372,7 @@ select {
     margin: 0 auto;
     position: relative;
     z-index: 1;
-    background: rgba(7, 15, 28, 0.82);
+    background: rgba(190, 226, 243, 0.68);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 28px;
     box-shadow: 0 36px 90px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.02);
@@ -406,7 +407,7 @@ select {
 
 .brand-kicker {
     margin: 0;
-    color: #7db0ff;
+    color: #24598a;
     font-size: 0.72rem;
     letter-spacing: 0.24em;
     text-transform: uppercase;
@@ -414,7 +415,7 @@ select {
 
 .brand-title {
     margin: 0;
-    color: #f5fbff;
+    color: #172044;
     font-size: 1.85rem;
     line-height: 1.05;
     letter-spacing: -0.02em;
@@ -422,13 +423,13 @@ select {
 
 .hero p {
     margin: 0;
-    color: #b8d5f6;
+    color: #35466e;
     font-size: 0.98rem;
     line-height: 1.75;
 }
 
 .field label {
-    color: #8daed4;
+    color: #35466e;
 }
 
 .field input,
@@ -535,8 +536,9 @@ select {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 10px 12px;
-    background: var(--bg);
-    color: var(--text);
+    background: #0f1318;
+    color: #ffffff;
+    caret-color: #ffffff;
     outline: none;
 }
 

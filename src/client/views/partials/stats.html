@@ -2,15 +2,15 @@
 <style>
     /* SPA partial: styles scoped under .stats-shell. Shares the FIFA-street
        scheme used by the home / pregame / create-room views so the app reads
-       as one design (dark panels, blue accent, wall-art background). */
+    as one design (light blue panels, blue accent, wall-art background). */
 
     .stats-shell {
-        --panel-border: rgba(255, 255, 255, 0.09);
-        --ink: #f3f5f8;
-        --ink-dim: #a8afb8;
-        --ink-mute: #6c7079;
+        --panel-border: rgba(23, 32, 68, 0.2);
+        --ink: #172044;
+        --ink-dim: #35466e;
+        --ink-mute: #586987;
         --accent: #2e9bf0;
-        --accent-hi: #57b2ff;
+        --accent-hi: #24598a;
         --accent-lo: #1a7bd2;
         --field-bg: #0f1318;
 
@@ -58,7 +58,8 @@
         font-weight: 700;
         letter-spacing: 0.25em;
         text-transform: uppercase;
-        color: var(--ink-dim);
+        color: #ffffff;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
     }
 
     .stats-shell #final-score {
@@ -71,18 +72,20 @@
         align-items: baseline;
         gap: 14px;
         flex-wrap: wrap;
-        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+        color: #ffffff;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
     }
 
     .stats-shell #winner-line {
         margin: 6px 0 0;
         font-size: 1.05rem;
         font-weight: 700;
-        color: var(--accent-hi);
+        color: #ffd166;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
     }
 
     .stats-shell .panel {
-        background: linear-gradient(165deg, rgba(30, 34, 39, 0.76), rgba(18, 21, 26, 0.76));
+        background: linear-gradient(165deg, rgba(198, 232, 247, 0.68), rgba(159, 211, 237, 0.66));
         border: 1px solid var(--panel-border);
         border-radius: 14px;
         padding: 18px 20px;
@@ -105,7 +108,7 @@
     }
 
     .stats-shell .stat-card {
-        background: var(--field-bg);
+        background: rgba(23, 32, 68, 0.06);
         border: 1px solid var(--panel-border);
         border-radius: 10px;
         padding: 14px 6px;
@@ -137,7 +140,7 @@
         grid-template-columns: 28px 1fr 32px;
         align-items: center;
         gap: 10px;
-        background: var(--field-bg);
+        background: rgba(23, 32, 68, 0.06);
         border: 1px solid var(--panel-border);
         border-radius: 8px;
         padding: 8px 12px;
