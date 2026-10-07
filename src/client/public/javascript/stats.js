@@ -11,6 +11,7 @@
         return;
     }
     const summary = JSON.parse(raw);
+    const username = sessionStorage.getItem("username") ?? null;
 
     const finalScore = document.getElementById("final-score");
     const winnerLine = document.getElementById("winner-line");
@@ -111,6 +112,6 @@
         }
 
         sessionStorage.removeItem("matchStats");
-        window.location.href = "/home";
+        window.location.assign("/home");
     });
 })();
