@@ -1,4 +1,5 @@
 <!-- the match itself: pitch canvas, gyro/tap/flick + WASD/Space controls -->
+<link rel="preload" href="/images/Designer.png" as="image" type="image/png">
 <style>
     /* SPA partial: styles scoped under .pitch-shell so nothing leaks into
        other views. */
@@ -127,7 +128,11 @@
             margin: 0 auto;
             padding: 0;
             border-radius: 0;
-            background: url("/images/Designer.png") center center / contain no-repeat;
+            background-color: #1a2e2a;
+            background-image: url("/images/Designer.png");
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: contain;
             box-shadow: none;
             display: flex;
             align-items: center;
