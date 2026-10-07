@@ -121,10 +121,25 @@
 
     @media (orientation: landscape) {
         .pitch-shell #pitch-container.in-stadium {
+            width: min(92vw, calc(80vh * 1.55));
+            height: min(80vh, calc(92vw / 1.55));
+            aspect-ratio: 1598 / 1013;
+            margin: 0 auto;
             padding: 0;
             border-radius: 0;
-            background: url("/images/Designer.png") center center / cover no-repeat;
+            background: url("/images/Designer.png") center center / contain no-repeat;
             box-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pitch-shell #pitch {
+            width: 66%;
+            max-width: none;
+            max-height: 70%;
+            height: auto;
+            transform: translateY(1%);
         }
 
         .pitch-shell .stadium {
