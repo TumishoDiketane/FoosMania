@@ -155,6 +155,12 @@
         cursor: not-allowed;
     }
 
+    .home-shell .action-btn.is-disabled {
+        opacity: 0.55;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
     /* ---- Sections & Inputs --------------------------------------------- */
 
     .home-shell .divider {
@@ -179,10 +185,14 @@
         color: var(--ink-mute);
     }
 
+    .home-shell .username-section {
+        margin-bottom: 24px;
+    }
+
     .home-shell .join-group {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 18px;
     }
 
     .home-shell .join-group input {
@@ -300,21 +310,33 @@
         <header class="home-head">
             <div class="brand">
                 <div class="brand-text">
-                    <p class="kicker">Create/Join A Room</p>
+                    <p class="kicker" id="current-user">Choose a player name</p>
                     <h1 class="room-title">FOOS MANIA</h1>
                 </div>
             </div>
-            <a class="action-btn create-btn nav-link" href="/create-room">Create room</a>
         </header>
 
+        <section class="username-section">
+            <form id="username-form">
+                <label for="username" class="input-label">Choose your username</label>
+                <div class="join-group">
+                    <input id="username" name="username" type="text" placeholder="e.g. bob" maxlength="25" autocomplete="nickname" required>
+                    <button id="username-submit" class="action-btn join-btn" type="submit">Continue</button>
+                </div>
+                <p id="username-status" class="form-hint" aria-live="polite"></p>
+            </form>
+        </section>
+
+        <div id="lobby-controls">
+        <a id="create-room-link" class="action-btn create-btn nav-link is-disabled" href="/create-room" aria-disabled="true" tabindex="-1">Create room</a>
         <div class="divider"></div>
 
         <section class="join-section">
             <h2 class="section-title">Have a code?</h2>
-            <label for="room-code" class="input-label">Use room codes to join public and private rooms.</label>
+            <label for="room-code" class="input-label">Use a room code to join a game.</label>
             <div class="join-group">
-                <input id="room-code" name="code" type="text" placeholder="Enter room code">
-                <button id="join-with-code-button" class="action-btn join-btn" type="button">Join Room</button>
+                <input id="room-code" name="code" type="text" placeholder="Enter room code" disabled>
+                <button id="join-with-code-button" class="action-btn join-btn" type="button" disabled>Join Room</button>
             </div>
             <p id="join-status" class="form-hint" aria-live="polite"></p>
         </section>
@@ -326,13 +348,14 @@
             
             <div id="room-list" class="room-grid" aria-live="polite"></div>
             
-            <div id="empty-room-state" class="empty-state" hidden>
+            <div id="empty-room-state" class="empty-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 10h.01M15 10h.01M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/>
                 </svg>
-                <p>No active rooms yet.</p>
+                <p>Choose a username to see active matches.</p>
             </div>
         </section>
+        </div>
 
     </div>
 </div>

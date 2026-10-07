@@ -1,4 +1,11 @@
 (function () {
+    const currentUser = document.getElementById('current-user');
+    const usernameForm = document.getElementById('username-form');
+    const usernameInput = document.getElementById('username');
+    const usernameStatus = document.getElementById('username-status');
+    const usernameSubmit = document.getElementById('username-submit');
+    const lobbyControls = document.getElementById('lobby-controls');
+    const createRoomLink = document.getElementById('create-room-link');
     const roomList = document.getElementById('room-list');
     const emptyRoomState = document.getElementById('empty-room-state');
     const joinWithCodeButton = document.getElementById('join-with-code-button');
@@ -17,6 +24,7 @@
 
         if (rooms.length === 0) {
             emptyRoomState.hidden = false;
+            emptyRoomState.querySelector('p').textContent = 'No active rooms yet.';
             return;
         }
 
@@ -125,8 +133,70 @@
         await joinRoom({ code });
     }
 
-    socket.on('rooms:update', renderRooms);
-    socket.emit('rooms:update'); // request initial list of rooms
+    function activateLobby(username) {
+        sessionStorage.setItem('username', username);
+        currentUser.textContent = `Welcome, ${username}`;
+        lobbyControls.hidden = false;
+        createRoomLink.classList.remove('is-disabled');
+        createRoomLink.removeAttribute('aria-disabled');
+        createRoomLink.removeAttribute('tabindex');
+        roomCodeInput.disabled = false;
+        joinWithCodeButton.disabled = false;
+
+        window.connectSocket(username);
+        socket.off('rooms:update', renderRooms);
+        socket.on('rooms:update', renderRooms);
+        socket.emit('rooms:update');
+    }
+
+    usernameForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const username = usernameInput.value.trim();
+        const savedUsername = sessionStorage.getItem('username');
+        usernameStatus.textContent = '';
+
+        if (!username) {
+            usernameStatus.textContent = 'Enter a username to continue.';
+            usernameInput.focus();
+            return;
+        }
+
+        usernameSubmit.disabled = true;
+        try {
+            if (username !== savedUsername) {
+                const response = await fetch(`/username-exists?username=${encodeURIComponent(username)}`);
+                const result = await response.json();
+                if (result.exists) {
+                    usernameStatus.textContent = 'That username is already taken. Choose another.';
+                    usernameInput.focus();
+                    return;
+                }
+            }
+
+            activateLobby(username);
+
+            const code = new URLSearchParams(location.search).get('code');
+            if (code !== null) {
+                navigateTo(`/pregame?code=${encodeURIComponent(code)}`);
+            }
+        } catch (error) {
+            usernameStatus.textContent = 'Could not check that username. Try again.';
+        } finally {
+            usernameSubmit.disabled = false;
+        }
+    });
+
+    const savedUsername = sessionStorage.getItem('username');
+    if (savedUsername) {
+        usernameInput.value = savedUsername;
+        activateLobby(savedUsername);
+
+        const code = new URLSearchParams(location.search).get('code');
+        if (code !== null) {
+            navigateTo(`/pregame?code=${encodeURIComponent(code)}`);
+        }
+    }
 
     joinWithCodeButton.addEventListener('click', joinRoomByCode);
 
@@ -146,6 +216,8 @@
     });
 
     window.cleanupView = () => {
-        socket.off('rooms:update');
+        if (socket) {
+            socket.off('rooms:update', renderRooms);
+        }
     };
 })();

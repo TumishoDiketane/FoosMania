@@ -11,7 +11,7 @@ router.use('/', (req, res, next) => {
 });
 
 router.get('/', (req, res) => {
-    res.render('login')
+    res.render('index')
 });
 
 router.get('/views/:view', (req, res) => {

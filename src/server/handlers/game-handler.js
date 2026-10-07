@@ -20,7 +20,6 @@ export const CONSTANTS = {
 	BALL_RADIUS: 8,
 	CONTROL_RADIUS: 60, // a free ball within this of a puck = they pick it up
 	TACKLE_RADIUS: 34, // opponent this close to a carried ball takes it over
-	MOVE_RADIUS: 120, // how far a puck may roam from its home spot
 	GOAL_HALF_WIDTH: 80, // goal mouth spans height/2 +- this
 	TICK_MS: 1000 / 30,
 	MOVE_SPEED: 4, // world units per tick at full tilt
@@ -252,7 +251,7 @@ export function handleMove(room, username, data) {
 	// Client sends its locally-predicted position; apply it directly so the
 	// server mirrors the client's physics. Clamp to the same boundaries the
 	// client enforces so a cheating/buggy client can't escape the field.
-	const { FIELD, PUCK_RADIUS, MOVE_RADIUS } = CONSTANTS;
+	const { FIELD, PUCK_RADIUS } = CONSTANTS;
 
 	if (data.x != null && data.y != null) {
 		let nx = Number(data.x);
@@ -261,15 +260,6 @@ export function handleMove(room, username, data) {
 		// Keep inside field
 		nx = Math.min(Math.max(nx, PUCK_RADIUS), FIELD.width - PUCK_RADIUS);
 		ny = Math.min(Math.max(ny, PUCK_RADIUS), FIELD.height - PUCK_RADIUS);
-
-		// Keep inside movement radius around home position
-		const dx = nx - puck.homeX;
-		const dy = ny - puck.homeY;
-		const dist = Math.hypot(dx, dy);
-		if (dist > MOVE_RADIUS) {
-			nx = puck.homeX + (dx / dist) * MOVE_RADIUS;
-			ny = puck.homeY + (dy / dist) * MOVE_RADIUS;
-		}
 
 		puck.x = nx;
 		puck.y = ny;
@@ -466,7 +456,7 @@ function endGame(io, room) {
 function tick(io, room) {
 	const game = room.game;
 	const now = Date.now();
-	const { FIELD, PUCK_RADIUS, BALL_RADIUS, CONTROL_RADIUS, MOVE_RADIUS, MOVE_SPEED, CARRY_OFFSET } = CONSTANTS;
+	const { FIELD, PUCK_RADIUS, BALL_RADIUS, CONTROL_RADIUS, MOVE_SPEED, CARRY_OFFSET } = CONSTANTS;
 	const pucks = Object.values(room.pucks);
 
 	// Time-capped match: the clock running out ends it with the current

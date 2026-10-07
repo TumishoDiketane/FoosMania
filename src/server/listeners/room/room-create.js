@@ -5,7 +5,7 @@ export const event = 'room:create';
 
 export function handler(io, socket, data, callback) {
 	const { username } = socket;
-	const { id, isPublic } = data;
+	const { id } = data;
 
 	if (typeof id !== 'string' || id.length === 0 || id.length > 15) {
 		callback({ success: false, reason: 'invalid-name' });
@@ -18,7 +18,7 @@ export function handler(io, socket, data, callback) {
 		return;
 	}
 
-	const room = createRoom({ id, isPublic, hostUserId: socket.id });
+	const room = createRoom({ id, isPublic: true, hostUserId: socket.id });
 	addUserToRoom(socket.id, username, room);
 
 	socket.join(id);

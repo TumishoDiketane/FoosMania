@@ -2,17 +2,26 @@
     Socket connection handling.
 */
 
-// globally available
-const username = sessionStorage.getItem('username');
+let socket = null;
 
-if (username == null) {
-    // redirect to login if no username is set
-    window.location.href = "/";
-}
-
-// globally available
-const socket = window.io({
-    auth: {
-        username
+window.connectSocket = function (username) {
+    if (!username) {
+        return null;
     }
-});
+
+    if (socket && socket.auth.username === username) {
+        return socket;
+    }
+
+    if (socket) {
+        socket.disconnect();
+    }
+
+    socket = window.io({ auth: { username } });
+    return socket;
+};
+
+const savedUsername = sessionStorage.getItem('username');
+if (savedUsername) {
+    window.connectSocket(savedUsername);
+}

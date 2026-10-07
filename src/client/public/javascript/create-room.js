@@ -1,14 +1,13 @@
-// Create-room: send the form's room name + visibility to the server over the
+// Create-room: send the form's room name to the server over the
 // shared socket (see socket.js), then follow the creator into the pregame
 // (waiting) screen.
 (function () {
     const form = document.querySelector(".form-grid");
     const nameInput = document.getElementById("room-name");
-    const visibilityInput = document.getElementById("room-visibility");
     const submitButton = form ? form.querySelector('button[type="submit"]') : null;
     const statusLabel = document.getElementById("create-status");
 
-    if (!form || !nameInput || !visibilityInput) {
+    if (!form || !nameInput) {
         return;
     }
 
@@ -19,18 +18,6 @@
     }
 
     let creating = false;
-
-    // Public/private toggle buttons write into the hidden #room-visibility
-    // input the submit handler already reads.
-    const toggleButtons = Array.from(document.querySelectorAll(".visibility-toggle .toggle-btn"));
-    for (const button of toggleButtons) {
-        button.addEventListener("click", () => {
-            visibilityInput.value = button.dataset.visibility;
-            for (const other of toggleButtons) {
-                other.classList.toggle("is-active", other === button);
-            }
-        });
-    }
 
     nameInput.addEventListener("input", () => {
         // Room names are lowercase a-z and hyphens only, max 15 chars.
@@ -59,7 +46,6 @@
 
         const response = await socket.emitWithAck("room:create", {
             id: roomName,
-            isPublic: visibilityInput.value === 'public',
         });
 
         if (response.success) {

@@ -1,6 +1,6 @@
 // The entire game experience: full zoomed-out pitch, always. Controlling a
-// puck never zooms in — your selected puck gets a green circle with its
-// movement area drawn around it, and input drives it directly from this view.
+// puck never zooms in — your selected puck gets a green circle, and input
+// drives it directly from this view.
 //
 // SPA view: uses the shared `socket` / `username` globals (socket.js), the kit
 // helpers (kits.js) and playSound (sounds.js), and registers window.cleanupView
@@ -411,18 +411,6 @@
         ctx.stroke();
     }
 
-    // The selected puck's movement area: the fixed circle around its home spot
-    // it is allowed to roam in (same radius the server enforces).
-    function drawMoveArea(puck) {
-        ctx.beginPath();
-        ctx.arc(puck.homeX, puck.homeY, constants.MOVE_RADIUS, 0, Math.PI * 2);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([6, 6]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-    }
-
     // A puck in its national shirt: base colour with the accent laid on in
     // the kit's pattern, clipped to the circle.
     function drawKitPuck(x, y, r, kit) {
@@ -507,10 +495,6 @@
     function drawPucks() {
         for (const puck of state.pucks) {
             const pos = displayPos(puck);
-
-            if (puck.id === selectedId) {
-                drawMoveArea(puck);
-            }
 
             drawEffects(puck, pos);
 
@@ -678,7 +662,7 @@
         const view = currentViewInput();
         inputDir = viewToWorld(view.x, view.y);
         if (inputDir.x !== 0 || inputDir.y !== 0) {
-            const { FIELD, PUCK_RADIUS, MOVE_RADIUS, MOVE_SPEED, TICK_MS } = constants;
+            const { FIELD, PUCK_RADIUS, MOVE_SPEED, TICK_MS } = constants;
             // Match the server's speed powerup so the prediction keeps up.
             const speed = puck.speedActive ? MOVE_SPEED * 1.8 : MOVE_SPEED;
             // Scale by MOVE_TICK_MS so speed is the same regardless of sensor rate.
@@ -686,13 +670,6 @@
             predicted.x += inputDir.x * step;
             predicted.y += inputDir.y * step;
 
-            const dx = predicted.x - puck.homeX;
-            const dy = predicted.y - puck.homeY;
-            const distance = Math.hypot(dx, dy);
-            if (distance > MOVE_RADIUS) {
-                predicted.x = puck.homeX + (dx / distance) * MOVE_RADIUS;
-                predicted.y = puck.homeY + (dy / distance) * MOVE_RADIUS;
-            }
             predicted.x = Math.min(Math.max(predicted.x, PUCK_RADIUS), FIELD.width - PUCK_RADIUS);
             predicted.y = Math.min(Math.max(predicted.y, PUCK_RADIUS), FIELD.height - PUCK_RADIUS);
 

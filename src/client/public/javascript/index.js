@@ -15,9 +15,10 @@ let navigationToken = 0;
 
 async function render(path) {
     const token = ++navigationToken;
+    const viewPath = path === '/' ? '/home' : path;
 
     try {
-        const response = await fetch(`/views${path}`);
+        const response = await fetch(`/views${viewPath}`);
         const htmlString = await response.text();
 
         if (token !== navigationToken) {
@@ -51,4 +52,9 @@ document.body.addEventListener('click', (e) => {
 // browser back/forward moves through the same render path
 window.addEventListener('popstate', () => render(location.pathname));
 
-render(location.pathname);
+const isLobbyPath = location.pathname === '/' || location.pathname === '/home';
+if (!sessionStorage.getItem('username') && !isLobbyPath) {
+    window.location.replace(`/${location.search}`);
+} else {
+    render(location.pathname);
+}
