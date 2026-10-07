@@ -101,10 +101,16 @@
         bootList.append(row);
     });
 
-    // The match is done: leave the room and head home.
+    // The match is done: leave the room and head home. Use a hard navigation
+    // here so the redirect still works even if the socket round-trip is slow.
     homeButton.addEventListener("click", () => {
-        socket.emit("room:leave", null);
+        try {
+            socket?.emit?.("room:leave", null);
+        } catch (error) {
+            console.warn("Failed to leave room from stats screen:", error);
+        }
+
         sessionStorage.removeItem("matchStats");
-        navigateTo("/home");
+        window.location.href = "/home";
     });
 })();
