@@ -565,7 +565,6 @@
         color: var(--ink);
     }
 
-    .pregame-shell .setting-row input[type="number"],
     .pregame-shell .setting-row select {
         font: inherit;
         font-size: 14px;
@@ -578,30 +577,8 @@
         max-width: 150px;
     }
 
-    .pregame-shell .setting-row input[type="range"] {
-        width: 90px;
-    }
-
-    .pregame-shell .setting-row .powerup-name {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .pregame-shell .setting-row .powerup-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        flex: 0 0 auto;
-    }
-
-    .pregame-shell .powerups-title {
-        margin-top: 14px;
-    }
-
-    /* By default (host view) hide the read-only display elements */
-    .pregame-shell .setting-value,
-    .pregame-shell .settings-readonly-grid {
+    /* By default (host view) hide the read-only duration display */
+    .pregame-shell .setting-value {
         display: none;
     }
 
@@ -612,18 +589,6 @@
 
     .pregame-shell .settings-card[data-readonly="true"] .setting-value {
         display: inline-flex;
-    }
-
-    .pregame-shell .settings-card[data-readonly="true"] .settings-grid {
-        /* Hide the editable rows wrapper — powerup controls are inside */
-    }
-
-    .pregame-shell .settings-card[data-readonly="true"] #setting-powerups {
-        display: none;
-    }
-
-    .pregame-shell .settings-card[data-readonly="true"] .settings-readonly-grid {
-        display: flex;
     }
 
     /* Read-only setting value chip shown to non-host players */
@@ -638,39 +603,6 @@
         border: 1px solid rgba(46, 155, 240, 0.35);
         color: #174e78;
         white-space: nowrap;
-    }
-
-    /* Powerup on/off pill for non-host */
-    .pregame-shell .powerup-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 3px 10px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 700;
-        background: rgba(23, 32, 68, 0.08);
-        border: 1px solid rgba(23, 32, 68, 0.14);
-        color: var(--ink-dim);
-    }
-
-    .pregame-shell .powerup-pill.active {
-        background: rgba(101, 230, 226, 0.28);
-        border-color: rgba(23, 32, 68, 0.18);
-        color: var(--ink);
-    }
-
-    .pregame-shell .powerup-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        flex: 0 0 auto;
-    }
-
-    .pregame-shell .settings-readonly-grid {
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 2px;
     }
 
     /* ---- Planet picker + host roster controls --------------------------- */
@@ -773,11 +705,6 @@
             <p class="section-copy">Match settings <span id="settings-lock" class="small-note"></span></p>
             <div class="settings-grid">
                 <label class="setting-row">
-                    <span class="setting-label">Goals to win</span>
-                    <input id="setting-goals" class="host-only" type="number" min="1" max="25" step="1" value="5">
-                    <span id="setting-goals-display" class="setting-value">5 goals</span>
-                </label>
-                <label class="setting-row">
                     <span class="setting-label">Time limit</span>
                     <select id="setting-duration" class="host-only">
                         <option value="">No limit</option>
@@ -790,9 +717,6 @@
                     <span id="setting-duration-display" class="setting-value">No limit</span>
                 </label>
             </div>
-            <p class="section-copy powerups-title">Powerups</p>
-            <div id="setting-powerups" class="settings-grid"></div>
-            <div id="setting-powerups-display" class="settings-readonly-grid"></div>
         </section>
 
         <div class="teams-head">

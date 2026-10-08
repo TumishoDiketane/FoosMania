@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 import { createRoomModel } from '../models/room.js';
 import { stopGame } from './game-handler.js';
-import { planets, POWERUPS } from '../utils/constants.js';
+import { planets } from '../utils/constants.js';
 
 const rooms = new Map();
 
@@ -91,14 +91,6 @@ export function updateRoomSettings(room, incoming) {
 	let changed = false;
 	const settings = room.settings;
 
-	if ('goalsToWin' in incoming) {
-		const goals = Math.round(Number(incoming.goalsToWin));
-		if (Number.isFinite(goals) && goals >= 1 && goals <= 25) {
-			settings.goalsToWin = goals;
-			changed = true;
-		}
-	}
-
 	if ('maxDurationSeconds' in incoming) {
 		if (incoming.maxDurationSeconds === null) {
 			settings.maxDurationSeconds = null;
@@ -108,23 +100,6 @@ export function updateRoomSettings(room, incoming) {
 			if (Number.isFinite(seconds) && seconds >= 30 && seconds <= 1800) {
 				settings.maxDurationSeconds = seconds;
 				changed = true;
-			}
-		}
-	}
-
-	if (incoming.powerups != null && typeof incoming.powerups === 'object') {
-		for (const [id, config] of Object.entries(incoming.powerups)) {
-			if (POWERUPS[id] == null || config == null || typeof config !== 'object') continue;
-			if ('enabled' in config) {
-				settings.powerups[id].enabled = Boolean(config.enabled);
-				changed = true;
-			}
-			if ('spawnChance' in config) {
-				const chance = Number(config.spawnChance);
-				if (Number.isFinite(chance) && chance >= 0 && chance <= 1) {
-					settings.powerups[id].spawnChance = chance;
-					changed = true;
-				}
 			}
 		}
 	}

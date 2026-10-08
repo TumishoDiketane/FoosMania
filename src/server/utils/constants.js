@@ -36,11 +36,11 @@ export const planets = [
 // Powerup metadata: single source of truth for server sim AND clients (sent
 // inside the game:join constants) — ids double as audio names (powerup-<id>).
 export const POWERUPS = {
-	powershot: { label: 'Power Shot', color: '#ff5533', durationMs: 0, defaultSpawnChance: 0.3 },
-	speed: { label: 'Speed Boost', color: '#33ddff', durationMs: 5000, defaultSpawnChance: 0.35 },
-	getball: { label: 'Magnet', color: '#ffe14d', durationMs: 0, defaultSpawnChance: 0.25 },
-	phonk: { label: 'Phonk', color: '#c266ff', durationMs: 10000, defaultSpawnChance: 0.2 },
-	biggoal: { label: 'Big Goal', color: '#66ff88', durationMs: 8000, defaultSpawnChance: 0.2 },
+	powershot: { label: 'Power Shot', color: '#ff5533', durationMs: 0, defaultSpawnChance: 1 },
+	speed: { label: 'Speed Boost', color: '#33ddff', durationMs: 5000, defaultSpawnChance: 1 },
+	getball: { label: 'Magnet', color: '#ffe14d', durationMs: 0, defaultSpawnChance: 1 },
+	phonk: { label: 'Phonk', color: '#c266ff', durationMs: 10000, defaultSpawnChance: 1 },
+	biggoal: { label: 'Big Goal', color: '#66ff88', durationMs: 8000, defaultSpawnChance: 1 },
 };
 
 // Room capacity. Pucks scale with the lobby (max(20, 2 * players), see

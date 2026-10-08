@@ -1,6 +1,6 @@
 // Pregame (waiting room): join the room's socket channel, render the live
 // roster for each team, let the host start the game, tune match settings
-// (goals, time limit, powerups, team planets) and manage players
+// (time limit, team planets) and manage players
 // (kick / move team). Everyone else sees the settings read-only. Spectators
 // (joined a full room) watch the lobby without team controls.
 // Gameplay itself (pitch/player views) is out of scope here.
@@ -23,9 +23,7 @@
 
     const settingsPanel = document.getElementById("settings-panel");
     const settingsLock = document.getElementById("settings-lock");
-    const goalsInput = document.getElementById("setting-goals");
     const durationSelect = document.getElementById("setting-duration");
-    const powerupsContainer = document.getElementById("setting-powerups");
 
     let roomCodeForCopying = null;
     let lastRenderedCode = null;
@@ -107,30 +105,16 @@
     // ---- Settings --------------------------------------------------------
 
     function collectAndSendSettings() {
-        const powerups = {};
-        for (const row of powerupsContainer.querySelectorAll("[data-powerup]")) {
-            powerups[row.dataset.powerup] = {
-                enabled: row.querySelector("input[type=checkbox]").checked,
-                spawnChance: Number(row.querySelector("input[type=range]").value),
-            };
-        }
-
         socket.emit("room:update-settings", {
             settings: {
-                goalsToWin: Number(goalsInput.value),
                 maxDurationSeconds: durationSelect.value === "" ? null : Number(durationSelect.value),
-                powerups,
             },
         });
     }
 
-    goalsInput.addEventListener("change", collectAndSendSettings);
     durationSelect.addEventListener("change", collectAndSendSettings);
-    powerupsContainer.addEventListener("change", collectAndSendSettings);
 
-    const goalsDisplay = document.getElementById("setting-goals-display");
     const durationDisplay = document.getElementById("setting-duration-display");
-    const powerupsDisplayContainer = document.getElementById("setting-powerups-display");
 
     const DURATION_LABELS = { "": "No limit", "60": "1 minute", "120": "2 minutes", "180": "3 minutes", "300": "5 minutes", "600": "10 minutes" };
 
@@ -145,60 +129,12 @@
         }
 
         const settings = room.settings ?? {};
-        const goalsVal = settings.goalsToWin ?? 5;
         const durationVal = settings.maxDurationSeconds == null ? "" : String(settings.maxDurationSeconds);
 
-        goalsInput.value = goalsVal;
         durationSelect.value = durationVal;
 
-        // Update read-only display chips
-        goalsDisplay.textContent = `${goalsVal} goal${goalsVal === 1 ? "" : "s"}`;
+        // Update read-only duration display
         durationDisplay.textContent = DURATION_LABELS[durationVal] ?? durationVal;
-
-        // Host editable powerups grid
-        powerupsContainer.innerHTML = "";
-        // Non-host readonly powerups pills grid
-        powerupsDisplayContainer.innerHTML = "";
-
-        for (const [id, config] of Object.entries(settings.powerups ?? {})) {
-            // Host row — full controls
-            const row = document.createElement("label");
-            row.className = "setting-row";
-            row.dataset.powerup = id;
-
-            const name = document.createElement("span");
-            name.className = "setting-label powerup-name";
-            const dot = document.createElement("span");
-            dot.className = "powerup-dot";
-            dot.style.background = config.color ?? "#fff";
-            name.append(dot, document.createTextNode(config.label ?? id));
-
-            const controls = document.createElement("span");
-            controls.className = "row-actions";
-            const chance = document.createElement("input");
-            chance.type = "range";
-            chance.min = "0";
-            chance.max = "1";
-            chance.step = "0.05";
-            chance.value = String(config.spawnChance ?? 0.25);
-            chance.title = "Spawn chance";
-            const enabled = document.createElement("input");
-            enabled.type = "checkbox";
-            enabled.checked = Boolean(config.enabled);
-            controls.append(chance, enabled);
-
-            row.append(name, controls);
-            powerupsContainer.append(row);
-
-            // Non-host pill
-            const pill = document.createElement("span");
-            pill.className = `powerup-pill${config.enabled ? " active" : ""}`;
-            const pillDot = document.createElement("span");
-            pillDot.className = "powerup-dot";
-            pillDot.style.background = config.color ?? "#fff";
-            pill.append(pillDot, document.createTextNode(config.label ?? id));
-            powerupsDisplayContainer.append(pill);
-        }
     }
 
 
