@@ -255,6 +255,19 @@
         gap: 10px;
     }
 
+    .pregame-shell .share-room-btn {
+        display: inline-grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+    }
+
+    .pregame-shell .share-room-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
     .pregame-shell .copy-state {
         font-size: 12px;
         color: #174e78;
@@ -693,6 +706,14 @@
                 </div>
                 <div class="copy-wrap">
                     <button id="copy-code" class="ghost-btn" type="button">Copy code</button>
+                    <button id="share-room" class="ghost-btn share-room-btn" type="button" aria-label="Share room" title="Share room">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"></path>
+                        </svg>
+                    </button>
                     <span id="copy-state" class="copy-state" aria-live="polite"></span>
                 </div>
             </div>

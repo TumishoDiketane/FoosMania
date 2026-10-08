@@ -10,6 +10,7 @@
     const hostPill = document.getElementById("host-pill");
     const roomStatus = document.getElementById("room-status");
     const copyCodeButton = document.getElementById("copy-code");
+    const shareRoomButton = document.getElementById("share-room");
     const copyState = document.getElementById("copy-state");
     const startGameButton = document.getElementById("start-game-button");
     const leaveRoomButton = document.getElementById("leave-room-button");
@@ -336,6 +337,20 @@
 
     const roomUpdateResponse = await socket.emitWithAck("room:update", null); // request update
 
+    function inviteUrl() {
+        return `${window.location.origin}/?code=${encodeURIComponent(roomCodeForCopying)}`;
+    }
+
+    async function copyInviteUrl() {
+        const url = inviteUrl();
+        try {
+            await navigator.clipboard.writeText(url);
+            copyState.textContent = "Invite link copied!";
+        } catch {
+            window.prompt("Copy this invite link", url);
+        }
+    }
+
     copyCodeButton.addEventListener("click", async () => {
         if (roomCodeForCopying == null) return;
 
@@ -345,6 +360,31 @@
         setTimeout(() => {
             copyState.textContent = "";
         }, 1500);
+    });
+
+    shareRoomButton.addEventListener("click", async () => {
+        if (roomCodeForCopying == null) return;
+
+        const url = inviteUrl();
+        const shareData = {
+            title: "Join my FoosMania game",
+            text: `Join my FoosMania game with room code ${roomCodeForCopying}`,
+            url,
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+                return;
+            } catch (error) {
+                if (error.name === "AbortError") return;
+            }
+        }
+
+        await copyInviteUrl();
+        setTimeout(() => {
+            copyState.textContent = "";
+        }, 2000);
     });
 
     teamEls.home.join.addEventListener("click", () => {
