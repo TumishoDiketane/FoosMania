@@ -1,6 +1,7 @@
 import { getSpectatorRoom, getUserRoom, reclaimMembership } from '../../handlers/user-handler.js';
 import { serializeJoinInfo } from '../../handlers/game-handler.js';
 import { getSubstitutionView, rebindSubstitutionTarget } from '../../handlers/substitution-handler.js';
+import { getPredictionSnapshot } from '../../handlers/prediction-handler.js';
 
 export const event = 'game:join';
 
@@ -44,6 +45,7 @@ export function handler(io, socket, data, callback) {
 			spectator: true,
 			socketId: socket.id,
 			substitutions: getSubstitutionView(spectatorRoom),
+				prediction: getPredictionSnapshot(username, spectatorRoom.game),
 			...serializeJoinInfo(spectatorRoom, null),
 		});
 		return;

@@ -264,7 +264,13 @@ Spectators (joined a full / running room) send this too; their callback has
     "goalsToWin": 5, // this room's target (from settings), not the default
     "teamNames": { "home": "France", "away": "Japan" },
     "puckIds": [0, 1, 2], // the pucks this user steers (empty for spectators)
-    "state": {} // latest game state, null if not started
+    "state": {}, // latest game state, null if not started
+    "prediction": { // spectators only
+        "points": 100,
+        "rules": { "cost": 10, "reward": 25, "penalty": 10, "startingPoints": 100 },
+        "pending": null,
+        "history": []
+    }
 }
 ```
 
@@ -393,6 +399,72 @@ center spot and play freezes for a 3-second countdown (`freezeMs` in
 }
 ```
 
+## `game:prediction`
+
+**serverbound**
+
+Submit one next-goal prediction as a spectator during live play. One pick is
+allowed per goal round. The 10-point entry cost is charged on submission; a
+correct pick receives 25 points, an incorrect pick loses 10 additional points,
+and a player pick is refunded if the goal has no officially credited player.
+Pending picks expire and are refunded when the match ends.
+
+### Data
+
+```json
+{ "type": "player", "target": "alice" }
+```
+
+or
+
+```json
+{ "type": "team", "target": "home" }
+```
+
+### Callback
+
+```json
+{
+    "success": true,
+    "prediction": { "type": "team", "target": "home", "round": 0 },
+    "points": 90,
+    "rules": { "cost": 10, "reward": 25, "penalty": 10, "startingPoints": 100 },
+    "pending": null,
+    "history": []
+}
+```
+
+`pending` is null in the immediate submission callback; the `prediction` field
+is the newly locked pick. A `game:join` response includes the current pending
+pick when reconnecting.
+
+## `game:prediction-update` (clientbound)
+
+Broadcasts only the current round number and total pending picks. Individual
+spectator selections are private.
+
+```json
+{ "round": 0, "pendingCount": 4 }
+```
+
+## `game:prediction-result` (clientbound)
+
+Sent privately to the spectator when their pick resolves or expires.
+
+```json
+{
+    "outcome": "correct|incorrect|void|expired",
+    "type": "player|team",
+    "target": "alice",
+    "scorer": "home",
+    "scorerUsername": "alice",
+    "teamOnly": false,
+    "pointsChange": 15,
+    "points": 115,
+    "round": 0
+}
+```
+
 ## `game:ended`
 
 **clientbound**
@@ -420,6 +492,9 @@ level score ends `"winner": "draw"`.
             "shots": 7,
             "goals": 3
         }
+    ],
+    "predictions": [
+        { "username": "watcher", "correct": 1, "incorrect": 1, "void": 0, "expired": 0, "pointsChange": -5 }
     ]
 }
 ```

@@ -135,6 +135,24 @@
         text-align: left;
     }
 
+    .stats-shell #prediction-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        text-align: left;
+    }
+
+    .stats-shell .prediction-stat-row {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 10px;
+        background: rgba(23, 32, 68, 0.06);
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+    }
+
     .stats-shell .boot-row {
         display: grid;
         grid-template-columns: 28px 1fr 32px;
@@ -264,6 +282,11 @@
         <section class="panel">
             <h2>Golden boot race</h2>
             <div id="boot-list"></div>
+        </section>
+
+        <section id="prediction-stats-section" class="panel" hidden>
+            <h2>Prediction standings</h2>
+            <div id="prediction-list"></div>
         </section>
 
         <button id="home-button">Back to home</button>

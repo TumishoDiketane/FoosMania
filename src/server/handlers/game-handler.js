@@ -11,6 +11,7 @@
 // The home team defends the left goal (x = 0), away the right.
 import { createPuckModel } from '../models/puck.js';
 import { POWERUPS } from '../utils/constants.js';
+import { expirePredictions, getMatchPredictionStats, initializePredictionMatch, resolvePredictions } from './prediction-handler.js';
 
 // Shared with clients via the game:join ack; the movement constants are
 // included so a client can predict its own puck with the exact same math.
@@ -174,6 +175,7 @@ export function startGame(io, room) {
 		lastTokenRollAt: Date.now(),
 		goalBoost: null, // { goal: 'home'|'away' (defending side), until }
 	};
+	initializePredictionMatch(room.game);
 	tickTimers.set(room.id, setInterval(() => tick(io, room), CONSTANTS.TICK_MS));
 
 	return true;
@@ -185,6 +187,7 @@ export function stopGame(room) {
 		clearInterval(timer);
 		tickTimers.delete(room.id);
 	}
+	expirePredictions(null, room);
 	room.game = null;
 	room.state = 'lobby';
 }
@@ -356,6 +359,7 @@ function creditGoal(room, game, scorer) {
 	const stats = statsFor(game, username);
 	if (stats) stats.goals++;
 	game.lastKick = null;
+	return username;
 }
 
 // The ball leaves the carrier's feet (kick, goal reset); a short grace period
@@ -415,7 +419,8 @@ function scoreGoal(io, room, scorer) {
 	const game = room.game;
 
 	game.score[scorer]++;
-	creditGoal(room, game, scorer);
+	const scorerUsername = creditGoal(room, game, scorer);
+	resolvePredictions(io, room, scorer, scorerUsername);
 	resetForKickoff(room);
 	io.to(room.id).emit('game:goal', { scorer, score: { ...game.score } });
 
@@ -428,6 +433,7 @@ function scoreGoal(io, room, scorer) {
 // send everyone to the stats screen.
 function endGame(io, room) {
 	const game = room.game;
+	expirePredictions(io, room);
 	const summary = {
 		score: { ...game.score },
 		teamNames: { home: room.homeTeamName, away: room.awayTeamName },
@@ -443,6 +449,7 @@ function endGame(io, room) {
 			team: user.team,
 			...(game.stats[user.username] ?? { touches: 0, passes: 0, shots: 0, goals: 0 }),
 		})),
+		predictions: getMatchPredictionStats(game),
 	};
 
 	room.lastMatch = summary;

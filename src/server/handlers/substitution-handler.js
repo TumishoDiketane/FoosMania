@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { serializeJoinInfo, serializeState } from './game-handler.js';
+import { getPredictionSnapshot } from './prediction-handler.js';
 import { getSpectatorRoom, getUserRoom } from './user-handler.js';
 
 const REQUEST_TTL_MS = 15000;
@@ -185,6 +186,7 @@ function approveSubstitution(io, room, request, socket) {
 			puckIds: [],
 			state: serializeState(room),
 			joinInfo: serializeJoinInfo(room, null),
+			prediction: getPredictionSnapshot(outgoing.username, room.game),
 		});
 		io.to(room.id).emit('game:substituted', {
 			team: request.targetTeam,
