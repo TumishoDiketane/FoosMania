@@ -25,7 +25,7 @@ afterEach(() => {
 function makeRoom() {
 	const room = createRoom({ id: `prediction-test-${randomUUID()}` });
 	room.state = 'game';
-	room.game = { freezeUntil: 0 };
+	room.game = { phase: 'regular', freezeUntil: 0 };
 	room.pucks = { player: { username: 'credited-player', team: 'home' } };
 	initializePredictionMatch(room.game);
 	rooms.push(room);

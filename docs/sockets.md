@@ -270,7 +270,8 @@ Spectators (joined a full / running room) send this too; their callback has
         "rules": { "cost": 10, "reward": 25, "penalty": 10, "startingPoints": 100 },
         "pending": null,
         "history": []
-    }
+    },
+    "shootout": null // public shootout state when a shootout is active
 }
 ```
 
@@ -285,6 +286,7 @@ The single authoritative snapshot.
 
 ```json
 {
+    "phase": "regular|penalty_setup|penalty_attempt|penalty_result",
     "pucks": [
         {
             "id": 0,
@@ -399,6 +401,88 @@ center spot and play freezes for a 3-second countdown (`freezeMs` in
 }
 ```
 
+## `game:penalty-update` (clientbound)
+
+Broadcast when a time-capped match is tied and enters its penalty shootout.
+Regular simulation and player movement/kicks are paused. The regular match
+score is not changed by penalty goals. Each team takes five alternating
+attempts; a tied shootout continues in paired sudden-death rounds. Goalkeepers
+are selected from each team's active players and remain fixed for the shootout.
+If no goalkeeper is chosen in the 10-second setup, the previous shootout's
+goalkeeper is preferred when still active; otherwise the first active username
+in deterministic alphabetical order is selected.
+
+```json
+{
+    "phase": "penalty_setup|penalty_setup_complete|penalty_attempt|penalty_result",
+    "notice": "MATCH TIED. Penalty shootout starting. Each team gets 5 attempts.",
+    "goalkeepers": { "home": "alice", "away": "bob" },
+    "players": { "home": ["alice"], "away": ["bob"] },
+    "penaltyScore": { "home": 0, "away": 0 },
+    "standardAttemptsPerTeam": 5,
+    "suddenDeath": false,
+    "attempt": {
+        "number": 1,
+        "team": "home",
+        "kicker": "alice",
+        "goalkeeper": "bob",
+        "deadline": 0,
+        "kickerLocked": false,
+        "goalkeeperLocked": false
+    }
+}
+```
+
+The attempt update contains role assignments and whether each input is locked,
+but never the selected direction.
+
+## `game:penalty` (serverbound)
+
+Only active players may submit shootout actions. During setup, a player may
+nominate an active player from their own team as goalkeeper. During an attempt,
+only its assigned kicker and defending goalkeeper may lock a direction.
+Directions are `left`, `middle`, or `right`; a submitted choice cannot change.
+
+```json
+{ "action": "goalkeeper", "username": "alice" }
+```
+
+```json
+{ "action": "choice", "direction": "left" }
+```
+
+The callback returns `{ "success": true }` when accepted, or a failure reason
+such as `setup_closed`, `not_assigned`, or `choice_locked`.
+
+## `game:penalty-result` (clientbound)
+
+Emitted only after both choices are locked or the 15-second input deadline
+expires. A missing kicker input is a miss. A missing goalkeeper input defaults
+to the kicker's direction (or `middle` if the kicker also timed out), preventing
+a timeout from granting an automatic goal.
+
+```json
+{
+    "number": 1,
+    "team": "home",
+    "kicker": "alice",
+    "goalkeeper": "bob",
+    "kickerChoice": "left",
+    "goalkeeperChoice": "right",
+    "kickerTimedOut": false,
+    "goalkeeperTimedOut": false,
+    "scored": true,
+    "penaltyScore": { "home": 1, "away": 0 },
+    "suddenDeath": false
+}
+```
+
+## `game:penalty-finished` (clientbound)
+
+Sent with the shootout winner, penalty score, fixed goalkeepers, and all
+revealed attempts. The subsequent `game:ended` event keeps the regular match
+score intact and includes this result under `shootout`.
+
 ## `game:prediction`
 
 **serverbound**
@@ -495,6 +579,12 @@ level score ends `"winner": "draw"`.
     ],
     "predictions": [
         { "username": "watcher", "correct": 1, "incorrect": 1, "void": 0, "expired": 0, "pointsChange": -5 }
-    ]
+    ],
+    "shootout": {
+        "winner": "home",
+        "penaltyScore": { "home": 5, "away": 4 },
+        "goalkeepers": { "home": "alice", "away": "bob" },
+        "attempts": []
+    }
 }
 ```

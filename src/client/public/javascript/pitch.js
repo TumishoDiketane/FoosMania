@@ -47,6 +47,26 @@
     const predictionBalance = document.getElementById("prediction-balance");
     const predictionMessage = document.getElementById("prediction-message");
     const predictionHistory = document.getElementById("prediction-history");
+    const shootoutPanel = document.getElementById("shootout-panel");
+    const shootoutHeading = document.getElementById("shootout-heading");
+    const shootoutStatus = document.getElementById("shootout-status");
+    const shootoutRegularScore = document.getElementById("shootout-regular-score");
+    const shootoutPenaltyScore = document.getElementById("shootout-penalty-score");
+    const shootoutRoundLabel = document.getElementById("shootout-round-label");
+    const shootoutMatchupLabel = document.getElementById("shootout-matchup-label");
+    const duelStage = document.getElementById("duel-stage");
+    const duelKickerAvatar = document.getElementById("duel-kicker-avatar");
+    const duelKickerName = document.getElementById("duel-kicker-name");
+    const duelKickerTeam = document.getElementById("duel-kicker-team");
+    const duelKeeperAvatar = document.getElementById("duel-keeper-avatar");
+    const duelKeeperName = document.getElementById("duel-keeper-name");
+    const duelKeeperTeam = document.getElementById("duel-keeper-team");
+    const shootoutGoalkeeperForm = document.getElementById("shootout-goalkeeper-form");
+    const shootoutGoalkeeper = document.getElementById("shootout-goalkeeper");
+    const shootoutGoalkeeperSubmit = document.getElementById("shootout-goalkeeper-submit");
+    const shootoutChoicePrompt = document.getElementById("shootout-choice-prompt");
+    const shootoutMessage = document.getElementById("shootout-message");
+    const shootoutDirectionButtons = [...document.querySelectorAll(".shootout-direction")];
 
     const FALLBACK_COLORS = { home: "#e74c3c", away: "#3498db" }; // until kits resolve
     const MAX_FLICK_ACCEL = 25; // m/s^2 that counts as a full-power kick
@@ -80,6 +100,12 @@
     let substitutionData = null;
     let predictionData = null;
     let predictionTargetsSignature = null;
+    let shootoutData = null;
+    let shootoutPlayersSignature = null;
+    let lastShootoutResult = null;
+    let displayedPenaltyScore = null;
+    let cinematicRunning = false;
+    const cinematicTimers = [];
 
     // Kick-in-progress (mobile drag OR desktop Space charge).
     let aiming = false; // mobile: pointer down, dragging an aim
@@ -150,7 +176,9 @@
     }
 
     function updateHint() {
-        if (spectator) {
+        if (!spectator && state?.phase && state.phase !== "regular") {
+            hint.textContent = "Penalty shootout underway.";
+        } else if (spectator) {
             hint.textContent = "Spectating this match.";
         } else if (!started) {
             hint.textContent = "Waiting for the game to start...";
@@ -166,7 +194,7 @@
     }
 
     function matchIsLive() {
-        return started && state !== null && (state.freezeMs ?? 0) <= 0;
+        return started && state !== null && (state.phase ?? "regular") === "regular" && (state.freezeMs ?? 0) <= 0;
     }
 
     function refreshSubstitutionAvailability() {
@@ -227,7 +255,7 @@
 
     function refreshPredictionPanel() {
         if (!predictionPanel) return;
-        predictionPanel.hidden = !spectator;
+        predictionPanel.hidden = !spectator || (state?.phase ?? "regular") !== "regular";
         if (!spectator || !predictionData) return;
         const rules = predictionData.rules;
         predictionRules.textContent = `Cost: ${rules.cost} points. Correct: +${rules.reward}. Incorrect: -${rules.penalty}.`;
@@ -261,6 +289,160 @@
         refreshPredictionPanel();
     }
 
+    function renderShootout() {
+        if (!shootoutPanel) return;
+        shootoutPanel.hidden = shootoutData == null || shootoutData.phase === "complete";
+        document.querySelector(".pitch-shell")?.classList.toggle("shootout-active", !shootoutPanel.hidden);
+        if (shootoutPanel.hidden) return;
+
+        const data = shootoutData;
+        const secondsLeft = data.phase === "penalty_setup"
+            ? Math.max(0, Math.ceil((data.setupEndsAt - Date.now()) / 1000))
+            : null;
+        const attempt = data.attempt;
+        const displayAttempt = attempt ?? (data.phase === "penalty_result" ? lastShootoutResult : null);
+        const attemptSecondsLeft = attempt == null
+            ? null
+            : Math.max(0, Math.ceil((attempt.deadline - Date.now()) / 1000));
+        const attackingTeam = displayAttempt?.team ?? null;
+        const defendingTeam = attackingTeam == null ? null : (attackingTeam === "home" ? "away" : "home");
+        const username = sessionStorage.getItem("username");
+        const role = attempt && !spectator
+            ? attempt.kicker === username
+                ? "kicker"
+                : attempt.goalkeeper === username
+                    ? "goalkeeper"
+                    : null
+            : null;
+        const roleLocked = role === "kicker" ? attempt?.kickerLocked : role === "goalkeeper" ? attempt?.goalkeeperLocked : true;
+
+        shootoutHeading.textContent = data.phase === "penalty_setup" ? "MATCH TIED" : "PENALTY DUEL";
+        shootoutRegularScore.textContent = `${state?.score.home ?? 0} — ${state?.score.away ?? 0}`;
+        displayedPenaltyScore ??= data.penaltyScore;
+        shootoutPenaltyScore.textContent = `${displayedPenaltyScore.home} — ${displayedPenaltyScore.away}`;
+        shootoutRoundLabel.textContent = data.phase === "penalty_setup"
+            ? "FIVE ATTEMPTS EACH"
+            : displayAttempt == null
+                ? "SHOOTOUT IN PROGRESS"
+                : data.suddenDeath
+                    ? `SUDDEN DEATH · ROUND ${Math.ceil((displayAttempt.number - 10) / 2)}`
+                    : `ATTEMPT ${displayAttempt.number} · ROUND ${Math.ceil(displayAttempt.number / 2)} OF 5`;
+        shootoutMatchupLabel.textContent = attackingTeam == null
+            ? `${teamNames.home} vs ${teamNames.away}`
+            : `${teamNames[attackingTeam]} attacking · ${teamNames[defendingTeam]} defending`;
+        if (!(cinematicRunning && data.phase === "penalty_result")) {
+            shootoutStatus.textContent = data.phase === "penalty_setup"
+                ? `Penalty shootout starting · choose a goalkeeper within ${secondsLeft}s.`
+                : data.phase === "penalty_attempt"
+                    ? roleLocked
+                        ? `Hidden choices · waiting for both players (${attemptSecondsLeft}s).`
+                        : role === "kicker"
+                            ? `Hidden choices · your shot is due in ${attemptSecondsLeft}s.`
+                            : role === "goalkeeper"
+                                ? `Hidden choices · lock your save before ${attemptSecondsLeft}s.`
+                                : `Hidden choices · reveal in ${attemptSecondsLeft}s.`
+                    : data.phase === "penalty_result"
+                        ? "The duel is resolving. Next penalty up shortly."
+                        : "Shootout starting.";
+        }
+
+        duelStage.classList.toggle("is-away", attackingTeam === "away");
+        duelKickerName.textContent = displayAttempt?.kicker ?? "Next attacker";
+        duelKickerTeam.textContent = attackingTeam == null ? "Attacking team" : `${teamNames[attackingTeam]} · ATTACK`;
+        duelKeeperName.textContent = displayAttempt?.goalkeeper ?? data.goalkeepers[defendingTeam] ?? "Keeper pending";
+        duelKeeperTeam.textContent = defendingTeam == null ? "Defending team" : `${teamNames[defendingTeam]} · DEFEND`;
+        setDuelAvatar(duelKickerAvatar, attempt?.kicker, attackingTeam);
+        setDuelAvatar(duelKeeperAvatar, attempt?.goalkeeper ?? data.goalkeepers[defendingTeam], defendingTeam);
+
+        const teamPlayers = myTeam == null ? [] : (data.players[myTeam] ?? []);
+        const signature = JSON.stringify([myTeam, teamPlayers, data.goalkeepers]);
+        if (signature !== shootoutPlayersSignature) {
+            shootoutPlayersSignature = signature;
+            const selected = data.goalkeepers[myTeam] ?? shootoutGoalkeeper.value;
+            shootoutGoalkeeper.replaceChildren();
+            for (const username of teamPlayers) {
+                const option = document.createElement("option");
+                option.value = username;
+                option.textContent = username;
+                shootoutGoalkeeper.append(option);
+            }
+            if (teamPlayers.includes(selected)) shootoutGoalkeeper.value = selected;
+        }
+        shootoutGoalkeeperForm.hidden = data.phase !== "penalty_setup" || spectator || teamPlayers.length === 0;
+        shootoutGoalkeeperSubmit.disabled = teamPlayers.length === 0;
+
+        shootoutChoicePrompt.textContent = data.phase === "penalty_setup"
+            ? spectator ? "Spectators are watching the setup." : myTeam ? `Select your ${teamNames[myTeam]} goalkeeper.` : "Waiting for team assignments."
+            : data.phase !== "penalty_attempt"
+                ? "Watch the duel. Player choices stay hidden until reveal."
+                : role === "kicker"
+                    ? roleLocked ? "Your shot is locked. Watch the lanes." : "Take the shot · choose a target lane."
+                    : role === "goalkeeper"
+                        ? roleLocked ? "Your save is locked. Watch the lanes." : "Defend the gate · choose a lane to cover."
+                        : "Spectators and teammates see the reveal with everyone else.";
+        for (const button of shootoutDirectionButtons) {
+            button.disabled = data.phase !== "penalty_attempt" || role === null || roleLocked;
+            button.setAttribute("aria-label", `${role === "goalkeeper" ? "Defend" : "Shoot"} ${button.dataset.direction}`);
+        }
+    }
+
+    function setDuelAvatar(element, username, team) {
+        const colors = team && kits?.[team]?.colors ? kits[team].colors : ["#377b66", "#d5be72"];
+        element.textContent = username
+            ? username.trim().split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()
+            : "?";
+        element.style.setProperty("--duel-base", colors[0]);
+        element.style.setProperty("--duel-accent", colors[1] ?? colors[0]);
+    }
+
+    function clearCinematicTimers() {
+        while (cinematicTimers.length) clearTimeout(cinematicTimers.pop());
+    }
+
+    function clearDuelAnimation() {
+        clearCinematicTimers();
+        cinematicRunning = false;
+        duelStage.classList.remove("cinematic-reveal", "cinematic-charge", "cinematic-flight", "cinematic-dive", "cinematic-goal", "cinematic-save");
+        duelStage.style.removeProperty("--flight-x");
+        duelStage.style.removeProperty("--flight-y");
+        duelStage.style.removeProperty("--keeper-dive");
+        duelStage.style.removeProperty("--keeper-tilt");
+        for (const direction of ["left", "middle", "right"]) {
+            document.getElementById(`duel-kicker-marker-${direction}`).textContent = "SHOT";
+            document.getElementById(`duel-keeper-marker-${direction}`).textContent = "SAVE";
+        }
+    }
+
+    function scheduleCinematic(callback, delay) {
+        cinematicTimers.push(setTimeout(callback, delay));
+    }
+
+    async function chooseShootoutGoalkeeper() {
+        const response = await socket.emitWithAck("game:penalty", {
+            action: "goalkeeper",
+            username: shootoutGoalkeeper.value,
+        });
+        shootoutMessage.textContent = response.success
+            ? `${shootoutGoalkeeper.value} set as goalkeeper.`
+            : response.reason === "setup_closed"
+                ? "Goalkeeper selection has closed."
+                : "That player cannot be selected as goalkeeper.";
+    }
+
+    async function submitShootoutDirection(event) {
+        const response = await socket.emitWithAck("game:penalty", {
+            action: "choice",
+            direction: event.currentTarget.dataset.direction,
+        });
+        if (!response.success) {
+            shootoutMessage.textContent = response.reason === "choice_locked"
+                ? "Your direction is already locked."
+                : "You are not assigned to this attempt.";
+        } else {
+            shootoutMessage.textContent = "Direction locked. Waiting for the other player.";
+        }
+    }
+
     function renderSubstitutionPanel() {
         if (!substitutionPanel || !substitutionData) return;
 
@@ -269,7 +451,7 @@
         const relevantRequests = requests.filter((request) =>
             isHost || request.targetPlayerId === socketId || request.spectatorId === socketId
         );
-        substitutionPanel.hidden = !spectator && relevantRequests.length === 0;
+        substitutionPanel.hidden = (state?.phase ?? "regular") !== "regular" || (!spectator && relevantRequests.length === 0);
         substitutionForm.hidden = !spectator;
 
         const selectedIdBeforeRender = substitutionTarget.value;
@@ -391,6 +573,7 @@
         spectator = Boolean(info.spectator);
         substitutionData = info.substitutions;
         predictionData = spectator ? info.prediction : null;
+        shootoutData = info.shootout;
         if (info.state) state = info.state;
         if (selectedId === null && myPuckIds.length) {
             selectedId = myPuckIds[0];
@@ -404,7 +587,7 @@
         setupStadium();
         fitOrientation();
 
-        if (!spectator) {
+        if (!spectator && (state?.phase ?? "regular") === "regular") {
             bindInput();
             maybeShowMotionButton();
         } else {
@@ -415,6 +598,7 @@
         updateHint();
         renderSubstitutionPanel();
         refreshPredictionPanel();
+        renderShootout();
     }
 
     function resolveMyTeam() {
@@ -476,6 +660,18 @@
 
     function onState(s) {
         state = s;
+        if ((s.phase ?? "regular") !== "regular") {
+            keys.clear();
+            inputDir = { x: 0, y: 0 };
+            resetKick();
+            unbindInput();
+            gauge.hidden = true;
+            enableBtn.hidden = true;
+        } else if (!spectator) {
+            bindInput();
+            gauge.hidden = false;
+            maybeShowMotionButton();
+        }
         resolveMyTeam();
         scoreA.textContent = `${teamNames.home} ${s.score.home}`;
         scoreB.textContent = `${s.score.away} ${teamNames.away}`;
@@ -515,6 +711,8 @@
         }
         refreshSubstitutionAvailability();
         refreshPredictionPanel();
+        renderShootout();
+        if ((s.phase ?? "regular") !== "regular") updateHint();
     }
 
     // Match over: stash the summary for the stats view and go there.
@@ -612,6 +810,67 @@
         refreshPredictionPanel();
     }
 
+    function onShootoutUpdate(data) {
+        const previousAttempt = shootoutData?.attempt?.number;
+        shootoutData = data;
+        const attemptChanged = data.attempt?.number != null && data.attempt.number !== previousAttempt;
+        if (attemptChanged) {
+            clearDuelAnimation();
+            lastShootoutResult = null;
+            displayedPenaltyScore = data.penaltyScore;
+            shootoutMessage.textContent = "";
+        }
+        if (!(cinematicRunning && data.phase === "penalty_result")) renderShootout();
+    }
+
+    function onShootoutResult(result) {
+        lastShootoutResult = result;
+        if (shootoutData) {
+            shootoutData = { ...shootoutData, phase: "penalty_result", penaltyScore: result.penaltyScore, attempt: null };
+        }
+        clearDuelAnimation();
+        cinematicRunning = true;
+        renderShootout();
+        duelStage.classList.add("cinematic-reveal");
+        shootoutStatus.textContent = "CHOICES REVEALED";
+        if (result.kickerChoice) {
+            document.getElementById(`duel-kicker-marker-${result.kickerChoice}`).textContent = "SHOT";
+        }
+        if (result.goalkeeperChoice) {
+            document.getElementById(`duel-keeper-marker-${result.goalkeeperChoice}`).textContent = "SAVE";
+        }
+        const travelDirection = result.team === "home" ? 1 : -1;
+        const laneOffset = { left: -20, middle: 0, right: 20 }[result.kickerChoice] ?? 0;
+        const keeperOffset = { left: -56, middle: 0, right: 56 }[result.goalkeeperChoice] ?? 0;
+        duelStage.style.setProperty("--flight-x", `${travelDirection * (60 + laneOffset)}vw`);
+        duelStage.style.setProperty("--flight-y", `${result.kickerChoice === "left" ? -10 : result.kickerChoice === "right" ? 10 : 0}px`);
+        duelStage.style.setProperty("--keeper-dive", `${-travelDirection * keeperOffset}px`);
+        duelStage.style.setProperty("--keeper-tilt", result.goalkeeperChoice === "left" ? "-18deg" : result.goalkeeperChoice === "right" ? "18deg" : "0deg");
+
+        scheduleCinematic(() => {
+            duelStage.classList.add("cinematic-charge");
+            shootoutStatus.textContent = "PULSE CHARGING";
+        }, 280);
+        scheduleCinematic(() => {
+            duelStage.classList.remove("cinematic-charge");
+            duelStage.classList.add("cinematic-flight");
+            shootoutStatus.textContent = "PULSE IN FLIGHT";
+        }, 760);
+        scheduleCinematic(() => {
+            duelStage.classList.add("cinematic-dive");
+            shootoutStatus.textContent = "THE KEEPER DIVES";
+        }, 1280);
+        scheduleCinematic(() => {
+            duelStage.classList.add(result.scored ? "cinematic-goal" : "cinematic-save");
+            displayedPenaltyScore = result.penaltyScore;
+            shootoutPenaltyScore.textContent = `${displayedPenaltyScore.home} — ${displayedPenaltyScore.away}`;
+            shootoutStatus.textContent = result.scored ? "GOAL · GATE BREACHED" : "SAVED · GATE HELD";
+            const kickerChoice = result.kickerChoice ?? "no kick (timeout)";
+            shootoutMessage.textContent = `${result.kicker}: ${kickerChoice} · ${result.goalkeeper}: ${result.goalkeeperChoice}`;
+        }, 1840);
+        renderShootout();
+    }
+
     function onKicked() {
         playSound("kick");
     }
@@ -660,6 +919,8 @@
     socket.on("game:ended", onEnded);
     socket.on("game:goal", onGoal);
     socket.on("game:prediction-result", onPredictionResult);
+    socket.on("game:penalty-update", onShootoutUpdate);
+    socket.on("game:penalty-result", onShootoutResult);
     socket.on("game:kicked", onKicked);
     socket.on("game:powerup", onPowerup);
     socket.on("game:substitution-update", onSubstitutionUpdate);
@@ -670,6 +931,9 @@
     substitutionRequestButton.addEventListener("click", requestSubstitution);
     substitutionTarget.addEventListener("change", refreshSubstitutionAvailability);
     predictionSubmit.addEventListener("click", submitPrediction);
+    shootoutGoalkeeperSubmit.addEventListener("click", chooseShootoutGoalkeeper);
+    for (const button of shootoutDirectionButtons) button.addEventListener("click", submitShootoutDirection);
+    const shootoutClockTimer = setInterval(renderShootout, 250);
 
     // ---- Drawing --------------------------------------------------------
 
@@ -948,6 +1212,13 @@
             predicted = { x: puck.x, y: puck.y };
         }
 
+        if ((state.phase ?? "regular") !== "regular") {
+            predicted.x = puck.x;
+            predicted.y = puck.y;
+            inputDir = { x: 0, y: 0 };
+            return;
+        }
+
         // During a countdown the server rejects game:move: pin the prediction
         // to the authoritative spot so the puck can't drift locally.
         if (state.freezeMs > 0) {
@@ -979,7 +1250,7 @@
     // Fixed-interval movement ticker: runs at MOVE_TICK_MS regardless of frame
     // rate or gyro event frequency, so movement speed is consistent on all devices.
     const movementTick = setInterval(() => {
-        if (spectator) return;
+        if (spectator || !matchIsLive()) return;
         predict();
     }, MOVE_TICK_MS);
 
@@ -1197,7 +1468,7 @@
     }
 
     const moveTimer = setInterval(() => {
-        if (spectator || !state || selectedId === null || predicted === null) return;
+        if (spectator || !matchIsLive() || selectedId === null || predicted === null) return;
         const view = currentViewInput();
         const w = viewToWorld(view.x, view.y);
         // Send the locally-predicted position directly so the server mirrors it.
@@ -1303,12 +1574,15 @@
         clearInterval(movementTick);
         clearTimeout(goalOverlayTimer);
         clearTimeout(powerupToastTimer);
+        clearInterval(shootoutClockTimer);
         socket.off("connect", join);
         socket.off("game:started", onStarted);
         socket.off("game:state", onState);
         socket.off("game:ended", onEnded);
         socket.off("game:goal", onGoal);
         socket.off("game:prediction-result", onPredictionResult);
+        socket.off("game:penalty-update", onShootoutUpdate);
+        socket.off("game:penalty-result", onShootoutResult);
         socket.off("game:kicked", onKicked);
         socket.off("game:powerup", onPowerup);
         socket.off("game:substitution-update", onSubstitutionUpdate);
@@ -1318,6 +1592,8 @@
         substitutionRequestButton.removeEventListener("click", requestSubstitution);
         substitutionTarget.removeEventListener("change", refreshSubstitutionAvailability);
         predictionSubmit.removeEventListener("click", submitPrediction);
+        shootoutGoalkeeperSubmit.removeEventListener("click", chooseShootoutGoalkeeper);
+        for (const button of shootoutDirectionButtons) button.removeEventListener("click", submitShootoutDirection);
         unbindInput();
         window.removeEventListener("resize", fitOrientation);
         window.removeEventListener(orientationEvent, onOrientation);

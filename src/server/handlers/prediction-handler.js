@@ -62,7 +62,7 @@ export function submitPrediction(io, socket, data, callback) {
 	const spectator = room?.spectators[socket.id];
 	if (room == null || spectator == null) return fail(callback, 'not_spectator');
 	const game = room.game;
-	if (room.state !== 'game' || game == null || Date.now() < game.freezeUntil) {
+	if (room.state !== 'game' || game == null || game.phase !== 'regular' || Date.now() < game.freezeUntil) {
 		return fail(callback, 'match_not_playing');
 	}
 

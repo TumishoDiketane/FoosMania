@@ -381,6 +381,576 @@
         font-size: 0.85rem;
     }
 
+    .pitch-shell #shootout-panel {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: clamp(12px, 2vh, 24px);
+        width: auto;
+        max-height: 100dvh;
+        overflow: auto;
+        margin: 0;
+        padding: clamp(14px, 3vw, 36px);
+        color: #f2f3e8;
+        background-color: #091112;
+        background-image:
+            repeating-linear-gradient(112deg, transparent 0 38px, rgba(164, 226, 205, 0.025) 39px 40px),
+            linear-gradient(135deg, #091112 0%, #14211d 54%, #0b1719 100%);
+        border: 0;
+        border-radius: 0;
+        text-align: left;
+    }
+
+    .pitch-shell.shootout-active {
+        overflow: hidden;
+        text-align: left;
+        background: #091112;
+    }
+
+    .pitch-shell.shootout-active > #scoreline,
+    .pitch-shell.shootout-active > #substitution-panel,
+    .pitch-shell.shootout-active > #enable-motion,
+    .pitch-shell.shootout-active > #pitch-container,
+    .pitch-shell.shootout-active > #prediction-panel,
+    .pitch-shell.shootout-active > #gauge,
+    .pitch-shell.shootout-active > #hint,
+    .pitch-shell.shootout-active > #confetti {
+        display: none !important;
+    }
+
+    .pitch-shell #shootout-panel [hidden] {
+        display: none !important;
+    }
+
+    .pitch-shell .shootout-header,
+    .pitch-shell .shootout-header-copy,
+    .pitch-shell .shootout-scoreboard,
+    .pitch-shell .shootout-matchup,
+    .pitch-shell .duel-person,
+    .pitch-shell .duel-person-copy,
+    .pitch-shell .duel-gate-heading,
+    .pitch-shell .shootout-controls,
+    .pitch-shell .shootout-row,
+    .pitch-shell #shootout-directions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .pitch-shell .shootout-header {
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .pitch-shell .shootout-header-copy {
+        display: block;
+    }
+
+    .pitch-shell .shootout-eyebrow,
+    .pitch-shell .shootout-score-label,
+    .pitch-shell .duel-side-label {
+        margin: 0;
+        color: #a9c6b9;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .pitch-shell #shootout-heading {
+        margin: 4px 0 0;
+        color: #f5f0d9;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(1.45rem, 3vw, 2.25rem);
+        font-weight: 700;
+        line-height: 1.05;
+    }
+
+    .pitch-shell .shootout-scoreboard {
+        gap: 0;
+        border: 1px solid rgba(174, 211, 194, 0.28);
+        background: rgba(6, 15, 15, 0.72);
+    }
+
+    .pitch-shell .shootout-score {
+        min-width: 120px;
+        padding: 9px 14px;
+    }
+
+    .pitch-shell .shootout-score + .shootout-score {
+        border-left: 1px solid rgba(174, 211, 194, 0.28);
+    }
+
+    .pitch-shell .shootout-score strong {
+        display: block;
+        margin-top: 2px;
+        color: #f5f0d9;
+        font-size: 1.3rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .pitch-shell .shootout-matchup {
+        justify-content: center;
+        gap: 12px;
+        padding: 8px 12px;
+        border-top: 1px solid rgba(174, 211, 194, 0.18);
+        border-bottom: 1px solid rgba(174, 211, 194, 0.18);
+        color: #ecf0df;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .pitch-shell #shootout-status {
+        margin: 0;
+        color: #e6b85d;
+        font-size: 1rem;
+        font-weight: 750;
+        text-align: center;
+    }
+
+    .pitch-shell .duel-stage {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(100px, 0.7fr) minmax(280px, 1.8fr);
+        grid-template-areas: "kicker gate";
+        align-items: center;
+        width: min(1100px, 100%);
+        min-height: clamp(230px, 42vh, 390px);
+        margin: 0 auto;
+        padding: 8px 3%;
+    }
+
+    .pitch-shell .duel-stage.is-away {
+        grid-template-areas: "gate kicker";
+    }
+
+    .pitch-shell .duel-stage.is-away .duel-lanes {
+        direction: rtl;
+    }
+
+    .pitch-shell .duel-stage.is-away .duel-lane {
+        direction: ltr;
+    }
+
+    .pitch-shell .duel-person {
+        position: relative;
+        z-index: 2;
+        flex-direction: column;
+        justify-content: center;
+        gap: 9px;
+        min-width: 0;
+        text-align: center;
+    }
+
+    .pitch-shell #duel-kicker {
+        grid-area: kicker;
+    }
+
+    .pitch-shell .duel-person-copy {
+        flex-direction: column;
+        gap: 2px;
+        max-width: 100%;
+    }
+
+    .pitch-shell .duel-person-name {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        color: #f4f0df;
+        font-size: clamp(0.85rem, 1.7vw, 1.1rem);
+        font-weight: 800;
+    }
+
+    .pitch-shell .duel-person-team {
+        color: #a9c6b9;
+        font-size: 0.75rem;
+    }
+
+    .pitch-shell .duel-avatar {
+        display: grid;
+        place-items: center;
+        width: clamp(56px, 8vw, 88px);
+        aspect-ratio: 1;
+        border: 4px solid var(--duel-accent, #75dbc1);
+        border-radius: 50%;
+        background: linear-gradient(145deg, var(--duel-base, #31785f), #0d1b1a);
+        box-shadow: 0 0 0 7px rgba(126, 224, 194, 0.08), 0 8px 28px rgba(0, 0, 0, 0.45);
+        color: #fff;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(1.2rem, 3vw, 2rem);
+        font-weight: 700;
+        transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .pitch-shell .duel-gate {
+        position: relative;
+        grid-area: gate;
+        min-width: 0;
+        padding: 14px 14px 16px;
+        border: 2px solid rgba(119, 235, 197, 0.62);
+        border-radius: 42% 42% 8px 8px / 14% 14% 8px 8px;
+        background: linear-gradient(180deg, rgba(25, 76, 66, 0.42), rgba(9, 24, 24, 0.88));
+        box-shadow: inset 0 0 36px rgba(69, 214, 171, 0.14), 0 0 30px rgba(69, 214, 171, 0.16);
+        transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .pitch-shell .duel-gate-heading {
+        justify-content: space-between;
+        margin: 0 4px 10px;
+    }
+
+    .pitch-shell .duel-gate-title {
+        color: #a4efcf;
+        font-size: 0.75rem;
+        font-weight: 900;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+    }
+
+    .pitch-shell .duel-gate-keeper {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: #e6f0df;
+        font-size: 0.75rem;
+        font-weight: 750;
+    }
+
+    .pitch-shell .duel-gate-keeper .duel-avatar {
+        width: 32px;
+        border-width: 2px;
+        font-family: sans-serif;
+        font-size: 0.75rem;
+    }
+
+    .pitch-shell .duel-lanes {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        min-height: clamp(120px, 22vh, 200px);
+        border: 1px solid rgba(154, 225, 197, 0.44);
+        background: repeating-linear-gradient(90deg, rgba(148, 218, 191, 0.08) 0 1px, transparent 1px 18px);
+        overflow: hidden;
+    }
+
+    .pitch-shell .duel-lane {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 0;
+        padding: 9px 3px;
+        border: 0;
+        border-right: 1px solid rgba(154, 225, 197, 0.36);
+        background: rgba(17, 51, 45, 0.22);
+        color: #c9ddd2;
+        cursor: pointer;
+        transition: background 160ms ease, color 160ms ease;
+    }
+
+    .pitch-shell .duel-lane:last-child {
+        border-right: 0;
+    }
+
+    .pitch-shell .duel-lane:disabled {
+        cursor: default;
+    }
+
+    .pitch-shell .duel-lane:enabled:hover,
+    .pitch-shell .duel-lane:focus-visible {
+        background: rgba(92, 198, 158, 0.28);
+        color: #fff;
+        outline: 2px solid #a4efcf;
+        outline-offset: -3px;
+    }
+
+    .pitch-shell .duel-lane-label {
+        font-size: 0.7rem;
+        font-weight: 850;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .pitch-shell .choice-marker {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        aspect-ratio: 1;
+        border: 2px solid #f4df9a;
+        border-radius: 50%;
+        background: #a25929;
+        color: #fff8dc;
+        font-size: 0.65rem;
+        font-weight: 900;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: opacity 160ms ease, transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .pitch-shell .choice-marker.keeper-marker {
+        border-color: #acf3dd;
+        background: #16705e;
+    }
+
+    .pitch-shell .duel-stage.cinematic-reveal .choice-marker {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .pitch-shell #duel-pulse {
+        position: absolute;
+        top: 50%;
+        left: 19%;
+        z-index: 3;
+        width: 24px;
+        aspect-ratio: 1;
+        border: 3px solid #fff3b5;
+        border-radius: 50%;
+        background: #ffd76a;
+        box-shadow: 0 0 12px #ffcb52, 0 0 30px rgba(255, 196, 66, 0.85);
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.4);
+        pointer-events: none;
+    }
+
+    .pitch-shell .duel-stage.is-away #duel-pulse {
+        left: 81%;
+    }
+
+    .pitch-shell .duel-stage.cinematic-charge #duel-pulse {
+        opacity: 1;
+        animation: pulse-charge 420ms ease-in-out infinite alternate;
+    }
+
+    .pitch-shell .duel-stage.cinematic-flight #duel-pulse {
+        opacity: 1;
+        transform: translate(calc(-50% + var(--flight-x, 30vw)), calc(-50% + var(--flight-y, 0px))) scale(1.1);
+        transition: transform 680ms cubic-bezier(0.2, 0.76, 0.36, 1), opacity 120ms ease;
+    }
+
+    .pitch-shell .duel-stage.cinematic-dive .duel-gate {
+        border-color: #e8c874;
+        box-shadow: inset 0 0 44px rgba(249, 205, 103, 0.22), 0 0 42px rgba(249, 205, 103, 0.3);
+    }
+
+    .pitch-shell .duel-stage.cinematic-dive #duel-keeper-avatar {
+        transform: translateX(var(--keeper-dive, 0px)) rotate(var(--keeper-tilt, 0deg)) scale(1.15);
+    }
+
+    .pitch-shell .duel-stage.cinematic-goal .duel-gate {
+        border-color: #f2d276;
+        box-shadow: inset 0 0 70px rgba(255, 209, 91, 0.34), 0 0 56px rgba(255, 209, 91, 0.48);
+    }
+
+    .pitch-shell .duel-stage.cinematic-save .duel-gate {
+        border-color: #e18c64;
+        box-shadow: inset 0 0 52px rgba(225, 140, 100, 0.25), 0 0 34px rgba(225, 140, 100, 0.36);
+    }
+
+    @keyframes pulse-charge {
+        to { transform: translate(-50%, -50%) scale(1.5); }
+    }
+
+    .pitch-shell .shootout-controls {
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .pitch-shell #shootout-choice-prompt,
+    .pitch-shell #shootout-message {
+        min-height: 1.25em;
+        margin: 0;
+        color: #d2dfd0;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .pitch-shell #shootout-directions {
+        justify-content: center;
+        width: min(660px, 100%);
+        gap: 10px;
+    }
+
+    .pitch-shell .shootout-direction {
+        flex: 1 1 0;
+        min-height: 48px;
+        padding: 10px 12px;
+        border: 1px solid rgba(155, 228, 196, 0.58);
+        background: linear-gradient(180deg, rgba(37, 83, 68, 0.9), rgba(16, 41, 38, 0.95));
+        color: #f3f0df;
+        font-size: 0.85rem;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .pitch-shell .shootout-direction:disabled {
+        opacity: 0.68;
+        cursor: default;
+    }
+
+    .pitch-shell .shootout-direction:focus-visible,
+    .pitch-shell .shootout-button:focus-visible {
+        outline: 3px solid #f1cf79;
+        outline-offset: 3px;
+    }
+
+    .pitch-shell .shootout-row select,
+    .pitch-shell .shootout-button {
+        min-height: 42px;
+        padding: 8px 11px;
+        color: #f3f0df;
+        background: #18332e;
+        border: 1px solid #82bca4;
+        border-radius: 3px;
+    }
+
+    .pitch-shell .shootout-button {
+        cursor: pointer;
+    }
+
+    .pitch-shell .shootout-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pitch-shell #shootout-goalkeeper-form {
+        justify-content: center;
+    }
+
+    @media (max-width: 700px) {
+        .pitch-shell #shootout-panel {
+            justify-content: flex-start;
+            gap: 14px;
+            padding: 13px 12px 18px;
+        }
+
+        .pitch-shell .shootout-header {
+            align-items: center;
+        }
+
+        .pitch-shell .shootout-score {
+            min-width: 82px;
+            padding: 6px 8px;
+        }
+
+        .pitch-shell .shootout-score-label {
+            font-size: 0.58rem;
+        }
+
+        .pitch-shell .shootout-score strong {
+            font-size: 1rem;
+        }
+
+        .pitch-shell .shootout-matchup {
+            gap: 5px;
+            padding: 6px 3px;
+            font-size: 0.72rem;
+        }
+
+        .pitch-shell .duel-stage {
+            grid-template-columns: minmax(70px, 0.58fr) minmax(0, 2fr);
+            min-height: clamp(190px, 32vh, 270px);
+            padding: 4px 0;
+        }
+
+        .pitch-shell .duel-stage.is-away {
+            grid-template-columns: minmax(0, 2fr) minmax(70px, 0.58fr);
+        }
+
+        .pitch-shell .duel-person-name {
+            font-size: 0.74rem;
+        }
+
+        .pitch-shell .duel-person-team,
+        .pitch-shell .duel-side-label {
+            font-size: 0.62rem;
+        }
+
+        .pitch-shell .duel-gate {
+            padding: 9px 7px 10px;
+        }
+
+        .pitch-shell .duel-gate-heading {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 7px;
+        }
+
+        .pitch-shell .duel-gate-title {
+            font-size: 0.63rem;
+        }
+
+        .pitch-shell .duel-gate-keeper {
+            font-size: 0.65rem;
+        }
+
+        .pitch-shell .duel-lanes {
+            min-height: clamp(105px, 20vh, 160px);
+        }
+
+        .pitch-shell .duel-lane-label {
+            font-size: 0.58rem;
+            letter-spacing: 0.04em;
+        }
+
+        .pitch-shell .choice-marker {
+            width: 24px;
+            font-size: 0.56rem;
+        }
+
+        .pitch-shell .shootout-controls {
+            gap: 8px;
+        }
+
+        .pitch-shell .shootout-direction {
+            min-height: 48px;
+            padding: 8px 4px;
+            font-size: 0.75rem;
+        }
+
+        .pitch-shell #shootout-status {
+            font-size: 0.86rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .pitch-shell .duel-avatar,
+        .pitch-shell .choice-marker,
+        .pitch-shell .duel-lane {
+            transition-duration: 0.01ms;
+        }
+
+        .pitch-shell .duel-stage.cinematic-charge #duel-pulse {
+            animation: none;
+        }
+    }
+
+    .pitch-shell #shootout-panel .shootout-row,
+    .pitch-shell #shootout-panel .shootout-controls {
+        display: flex;
+    }
+
+    .pitch-shell .shootout-button {
+        cursor: pointer;
+    }
+
+    .pitch-shell .shootout-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pitch-shell .shootout-direction {
+        min-width: 88px;
+        background: #315f50;
+        border-color: #719b86;
+    }
+
     /* ---- Goal confetti (client-only cosmetic) ---------------------------- */
 
     .pitch-shell #confetti {
@@ -446,6 +1016,79 @@
         <p id="prediction-balance"></p>
         <p id="prediction-message" aria-live="polite"></p>
         <ol id="prediction-history" aria-label="Recent prediction results"></ol>
+    </section>
+    <section id="shootout-panel" hidden aria-label="Penalty shootout">
+        <header class="shootout-header">
+            <div class="shootout-header-copy">
+                <p class="shootout-eyebrow">FoosMania · Penalty Duel</p>
+                <h1 id="shootout-heading">MATCH TIED</h1>
+            </div>
+            <div class="shootout-scoreboard" aria-label="Match and penalty scores">
+                <div class="shootout-score">
+                    <span class="shootout-score-label">Regular score</span>
+                    <strong id="shootout-regular-score"></strong>
+                </div>
+                <div class="shootout-score">
+                    <span class="shootout-score-label">Penalty score</span>
+                    <strong id="shootout-penalty-score"></strong>
+                </div>
+            </div>
+        </header>
+        <div class="shootout-matchup" aria-live="polite">
+            <span id="shootout-round-label"></span>
+            <span aria-hidden="true">·</span>
+            <span id="shootout-matchup-label"></span>
+        </div>
+        <p id="shootout-status" aria-live="polite"></p>
+        <div id="duel-stage" class="duel-stage">
+            <article id="duel-kicker" class="duel-person">
+                <span class="duel-side-label">Kicker · Attack</span>
+                <span id="duel-kicker-avatar" class="duel-avatar">?</span>
+                <span class="duel-person-copy">
+                    <strong id="duel-kicker-name" class="duel-person-name">Waiting</strong>
+                    <span id="duel-kicker-team" class="duel-person-team"></span>
+                </span>
+            </article>
+            <div id="duel-gate" class="duel-gate">
+                <div class="duel-gate-heading">
+                    <strong class="duel-gate-title">Aurora Gate</strong>
+                    <span class="duel-gate-keeper">
+                        <span id="duel-keeper-avatar" class="duel-avatar">?</span>
+                        <span class="duel-person-copy">
+                            <strong id="duel-keeper-name" class="duel-person-name">Keeper</strong>
+                            <span id="duel-keeper-team" class="duel-person-team"></span>
+                        </span>
+                    </span>
+                </div>
+                <div id="duel-lanes" class="duel-lanes" aria-label="Three penalty target lanes">
+                    <button class="duel-lane shootout-direction" type="button" data-direction="left" aria-label="Choose left lane">
+                        <span class="duel-lane-label">Left</span>
+                        <span id="duel-kicker-marker-left" class="choice-marker">SHOT</span>
+                        <span id="duel-keeper-marker-left" class="choice-marker keeper-marker">SAVE</span>
+                    </button>
+                    <button class="duel-lane shootout-direction" type="button" data-direction="middle" aria-label="Choose middle lane">
+                        <span class="duel-lane-label">Middle</span>
+                        <span id="duel-kicker-marker-middle" class="choice-marker">SHOT</span>
+                        <span id="duel-keeper-marker-middle" class="choice-marker keeper-marker">SAVE</span>
+                    </button>
+                    <button class="duel-lane shootout-direction" type="button" data-direction="right" aria-label="Choose right lane">
+                        <span class="duel-lane-label">Right</span>
+                        <span id="duel-kicker-marker-right" class="choice-marker">SHOT</span>
+                        <span id="duel-keeper-marker-right" class="choice-marker keeper-marker">SAVE</span>
+                    </button>
+                </div>
+            </div>
+            <span id="duel-pulse" aria-hidden="true"></span>
+        </div>
+        <div class="shootout-controls">
+            <p id="shootout-choice-prompt" aria-live="polite"></p>
+            <div id="shootout-goalkeeper-form" class="shootout-row" hidden>
+                <label for="shootout-goalkeeper">Choose your team goalkeeper</label>
+                <select id="shootout-goalkeeper"></select>
+                <button id="shootout-goalkeeper-submit" class="shootout-button" type="button">Set goalkeeper</button>
+            </div>
+            <p id="shootout-message" aria-live="polite"></p>
+        </div>
     </section>
     <div id="gauge">
         <div id="gauge-fill"></div>

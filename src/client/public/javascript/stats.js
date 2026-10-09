@@ -19,6 +19,10 @@
     const bootList = document.getElementById("boot-list");
     const predictionStatsSection = document.getElementById("prediction-stats-section");
     const predictionList = document.getElementById("prediction-list");
+    const shootoutStatsSection = document.getElementById("shootout-stats-section");
+    const shootoutFinalScore = document.getElementById("shootout-final-score");
+    const shootoutGoalkeepers = document.getElementById("shootout-goalkeepers");
+    const shootoutAttemptList = document.getElementById("shootout-attempt-list");
     const homeButton = document.getElementById("home-button");
 
     const kits = resolveKits(summary.teamNames.home, summary.teamNames.away);
@@ -39,8 +43,9 @@
     awaySpan.style.color = teamColor.away;
     finalScore.append(homeSpan, dash, awaySpan);
 
-    winnerLine.textContent =
-        summary.winner === "draw"
+    winnerLine.textContent = summary.shootout
+        ? `${summary.teamNames[summary.shootout.winner]} win the penalty shootout!`
+        : summary.winner === "draw"
             ? "It's a draw!"
             : `${summary.teamNames[summary.winner]} win the match!`;
 
@@ -116,6 +121,21 @@
         record.textContent = `${entry.correct} correct, ${entry.incorrect} incorrect, ${entry.void} void, ${entry.expired ?? 0} expired · ${pointsChange > 0 ? "+" : ""}${pointsChange} points`;
         row.append(spectator, record);
         predictionList.append(row);
+    }
+
+    const shootout = summary.shootout;
+    shootoutStatsSection.hidden = shootout == null;
+    if (shootout) {
+        shootoutFinalScore.textContent = `Penalties: ${summary.teamNames.home} ${shootout.penaltyScore.home} - ${shootout.penaltyScore.away} ${summary.teamNames.away}`;
+        shootoutGoalkeepers.textContent = `Goalkeepers: ${summary.teamNames.home} ${shootout.goalkeepers.home}; ${summary.teamNames.away} ${shootout.goalkeepers.away}`;
+        for (const attempt of shootout.attempts) {
+            const row = document.createElement("div");
+            row.className = "shootout-attempt-row";
+            const kickerChoice = attempt.kickerChoice ?? "no kick (timeout)";
+            const outcome = attempt.scored ? "goal" : "saved";
+            row.textContent = `Attempt ${attempt.number}${attempt.suddenDeath ? " (sudden death)" : ""}: ${summary.teamNames[attempt.team]} · ${attempt.kicker ?? "No kicker"} (${kickerChoice}) vs ${attempt.goalkeeper} (${attempt.goalkeeperChoice}) · ${outcome}`;
+            shootoutAttemptList.append(row);
+        }
     }
 
     // The match is done: leave the room and head home. Use a hard navigation
