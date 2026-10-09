@@ -167,6 +167,7 @@ export function startGame(io, room) {
 		lastNudgeAt: Date.now(),
 		emptySince: null,
 		stats: {}, // username -> { touches, passes, shots, goals }
+		substitutionsByTeam: { home: 0, away: 0 },
 		lastKick: null, // { puckId, team, username } of the most recent kick
 		tokens: [], // powerup pickups on the field: { id, type, x, y }
 		nextTokenId: 1,

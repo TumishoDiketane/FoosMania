@@ -1,5 +1,6 @@
 import { getSpectatorRoom, getUserRoom, reclaimMembership } from '../../handlers/user-handler.js';
 import { serializeJoinInfo } from '../../handlers/game-handler.js';
+import { getSubstitutionView, rebindSubstitutionTarget } from '../../handlers/substitution-handler.js';
 
 export const event = 'game:join';
 
@@ -10,6 +11,7 @@ export function handler(io, socket, data, callback) {
 	// during the disconnect grace window before deciding we have no room.
 	const reclaimed = reclaimMembership(socket.id, username);
 	if (reclaimed != null) {
+		rebindSubstitutionTarget(io, reclaimed, socket.id, username);
 		io.fireRoomUpdate(reclaimed.id);
 		io.fireRoomsUpdate();
 	}
@@ -24,6 +26,8 @@ export function handler(io, socket, data, callback) {
 		callback({
 			status: 'success',
 			spectator: false,
+			socketId: socket.id,
+			substitutions: getSubstitutionView(room),
 			...serializeJoinInfo(room, username),
 		});
 		return;
@@ -38,6 +42,8 @@ export function handler(io, socket, data, callback) {
 		callback({
 			status: 'success',
 			spectator: true,
+			socketId: socket.id,
+			substitutions: getSubstitutionView(spectatorRoom),
 			...serializeJoinInfo(spectatorRoom, null),
 		});
 		return;

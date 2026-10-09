@@ -104,6 +104,19 @@ export function updateRoomSettings(room, incoming) {
 		}
 	}
 
+	if ('substitutionApproval' in incoming && ['player', 'host'].includes(incoming.substitutionApproval)) {
+		settings.substitutionApproval = incoming.substitutionApproval;
+		changed = true;
+	}
+
+	if ('substitutionsPerTeam' in incoming) {
+		const limit = Math.round(Number(incoming.substitutionsPerTeam));
+		if (Number.isFinite(limit) && limit >= 0 && limit <= 10) {
+			settings.substitutionsPerTeam = limit;
+			changed = true;
+		}
+	}
+
 	return changed;
 }
 
