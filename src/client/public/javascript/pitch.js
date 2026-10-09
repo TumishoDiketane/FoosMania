@@ -34,6 +34,12 @@
     const container = document.getElementById("pitch-container");
     const confettiHolder = document.getElementById("confetti");
     const countdownEl = document.getElementById("countdown");
+    const substitutionPanel = document.getElementById("substitution-panel");
+    const substitutionForm = document.getElementById("substitution-form");
+    const substitutionTarget = document.getElementById("substitution-target");
+    const substitutionRequestButton = document.getElementById("substitution-request");
+    const substitutionRequests = document.getElementById("substitution-requests");
+    const substitutionMessage = document.getElementById("substitution-message");
 
     const FALLBACK_COLORS = { home: "#e74c3c", away: "#3498db" }; // until kits resolve
     const MAX_FLICK_ACCEL = 25; // m/s^2 that counts as a full-power kick
@@ -63,6 +69,8 @@
     let portrait = false;
     let flip = false; // portrait + home team: rotate 180 so our goal is up top
     let inputBound = false;
+    let socketId = null;
+    let substitutionData = null;
 
     // Kick-in-progress (mobile drag OR desktop Space charge).
     let aiming = false; // mobile: pointer down, dragging an aim
@@ -148,6 +156,124 @@
         }
     }
 
+    function matchIsLive() {
+        return started && state !== null && (state.freezeMs ?? 0) <= 0;
+    }
+
+    function refreshSubstitutionAvailability() {
+        if (!substitutionPanel || !substitutionData) return;
+        const ownRequest = substitutionData.requests.find((request) => request.spectatorId === socketId);
+        const hasCapacity = substitutionData.players.some((player) =>
+            (substitutionData.counts[player.team] ?? 0) < substitutionData.limitPerTeam
+        );
+        const canRequest = spectator && matchIsLive() && !ownRequest && hasCapacity;
+        substitutionRequestButton.disabled = !canRequest || !substitutionTarget.value;
+    }
+
+    function renderSubstitutionPanel() {
+        if (!substitutionPanel || !substitutionData) return;
+
+        const requests = substitutionData.requests;
+        const isHost = substitutionData.hostUserId === socketId;
+        const relevantRequests = requests.filter((request) =>
+            isHost || request.targetPlayerId === socketId || request.spectatorId === socketId
+        );
+        substitutionPanel.hidden = !spectator && relevantRequests.length === 0;
+        substitutionForm.hidden = !spectator;
+
+        const selectedIdBeforeRender = substitutionTarget.value;
+        substitutionTarget.replaceChildren();
+        const availablePlayers = substitutionData.players.filter((player) =>
+            (substitutionData.counts[player.team] ?? 0) < substitutionData.limitPerTeam
+        );
+        for (const player of availablePlayers) {
+            const option = document.createElement("option");
+            option.value = player.id;
+            option.textContent = `${player.username} (${player.team})`;
+            substitutionTarget.append(option);
+        }
+        if (availablePlayers.some((player) => player.id === selectedIdBeforeRender)) {
+            substitutionTarget.value = selectedIdBeforeRender;
+        }
+        substitutionTarget.disabled = availablePlayers.length === 0;
+        substitutionRequestButton.textContent = availablePlayers.length ? "Request Substitution" : "Substitution limit reached";
+
+        substitutionRequests.replaceChildren();
+        for (const request of relevantRequests) {
+            const row = document.createElement("div");
+            row.className = "substitution-request";
+            const description = document.createElement("span");
+            const requestStatus = request.status === "expired" ? "Player approval expired; host may force approve" : "Awaiting approval";
+            description.textContent = `${request.spectatorName} requests ${request.targetPlayerName}'s ${request.targetTeam} slot. ${requestStatus}.`;
+            row.append(description);
+
+            const actions = document.createElement("div");
+            actions.className = "substitution-actions";
+            const isTarget = request.targetPlayerId === socketId;
+            const isRequester = request.spectatorId === socketId;
+            const hostCanApprove = isHost && (
+                substitutionData.approvalMode === "host" ||
+                request.targetDisconnected ||
+                (request.status === "expired" && Date.now() <= request.hostExpiresAt)
+            );
+
+            if (isTarget && request.status === "pending") {
+                actions.append(
+                    makeSubstitutionButton("Approve", request.id, "approve"),
+                    makeSubstitutionButton("Reject", request.id, "reject")
+                );
+            }
+            if (isHost) {
+                if (hostCanApprove && (!isTarget || request.status === "expired")) {
+                    actions.append(makeSubstitutionButton(request.status === "expired" ? "Force approve" : "Approve", request.id, "approve"));
+                }
+                if (request.status === "pending") {
+                    if (!isTarget) actions.append(makeSubstitutionButton("Reject", request.id, "reject"));
+                    actions.append(makeSubstitutionButton("Cancel", request.id, "cancel"));
+                } else {
+                    actions.append(makeSubstitutionButton("Cancel", request.id, "cancel"));
+                }
+            } else if (isRequester) {
+                actions.append(makeSubstitutionButton("Cancel", request.id, "cancel"));
+            }
+            row.append(actions);
+            substitutionRequests.append(row);
+        }
+        refreshSubstitutionAvailability();
+    }
+
+    function makeSubstitutionButton(label, requestId, action) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "substitution-button";
+        button.textContent = label;
+        button.addEventListener("click", () => sendSubstitutionAction({ action, requestId }));
+        return button;
+    }
+
+    async function sendSubstitutionAction(action) {
+        const response = await socket.emitWithAck("game:substitution", action);
+        if (!response.success) {
+            substitutionMessage.textContent = response.reason === "request_expired"
+                ? "That substitution request has expired."
+                : "The substitution could not be completed.";
+        } else {
+            substitutionMessage.textContent = "";
+        }
+    }
+
+    async function requestSubstitution() {
+        const response = await socket.emitWithAck("game:substitution", {
+            action: "request",
+            targetPlayerId: substitutionTarget.value,
+        });
+        substitutionMessage.textContent = response.success
+            ? "Request sent. The player or host must approve."
+            : response.reason === "substitution_limit"
+                ? "That team has reached its substitution limit."
+                : "A substitution request could not be sent.";
+    }
+
     function resetKick() {
         aiming = false;
         spaceCharging = false;
@@ -167,10 +293,12 @@
         }
 
         constants = info.constants;
+        socketId = info.socketId;
         teamNames = info.teamNames;
         myPuckIds = info.puckIds;
         started = info.started;
         spectator = Boolean(info.spectator);
+        substitutionData = info.substitutions;
         if (info.state) state = info.state;
         if (selectedId === null && myPuckIds.length) {
             selectedId = myPuckIds[0];
@@ -193,6 +321,7 @@
         }
 
         updateHint();
+        renderSubstitutionPanel();
     }
 
     function resolveMyTeam() {
@@ -291,6 +420,7 @@
             iControl = controlMine;
             updateHint();
         }
+        refreshSubstitutionAvailability();
     }
 
     // Match over: stash the summary for the stats view and go there.
@@ -304,6 +434,53 @@
     function onStarted() {
         playSound("countdown");
         join();
+    }
+
+    function onSubstitutionUpdate(data) {
+        substitutionData = data;
+        renderSubstitutionPanel();
+    }
+
+    function onSubstitutionNotice(data) {
+        if (data?.request?.targetPlayerId === socketId) {
+            substitutionMessage.textContent = `${data.request.spectatorName} requested your slot.`;
+        } else if (data?.request && substitutionData?.hostUserId === socketId) {
+            substitutionMessage.textContent = `Substitution requested for ${data.request.targetPlayerName}.`;
+        }
+    }
+
+    function onSubstitutionRole(data) {
+        spectator = Boolean(data.spectator);
+        myPuckIds = data.puckIds ?? [];
+        selectedId = myPuckIds[0] ?? null;
+        predicted = null;
+        myTeam = null;
+        state = data.state;
+        started = true;
+        inputDir = { x: 0, y: 0 };
+        keys.clear();
+        resetKick();
+
+        if (spectator) {
+            unbindInput();
+            enableBtn.hidden = true;
+            gauge.hidden = true;
+        } else {
+            bindInput();
+            gauge.hidden = false;
+            maybeShowMotionButton();
+        }
+
+        resolveMyTeam();
+        fitOrientation();
+        onState(data.state);
+        renderSubstitutionPanel();
+        updateHint();
+        substitutionMessage.textContent = spectator ? "You are now spectating." : "Substitution approved. You are in the match.";
+    }
+
+    function onSubstituted(data) {
+        substitutionMessage.textContent = `${data.incoming} replaced ${data.outgoing} on ${data.team}.`;
     }
 
     const goalOverlay = document.getElementById("goal-overlay");
@@ -373,6 +550,13 @@
     socket.on("game:goal", onGoal);
     socket.on("game:kicked", onKicked);
     socket.on("game:powerup", onPowerup);
+    socket.on("game:substitution-update", onSubstitutionUpdate);
+    socket.on("game:substitution-notice", onSubstitutionNotice);
+    socket.on("game:substitution-role", onSubstitutionRole);
+    socket.on("game:substituted", onSubstituted);
+
+    substitutionRequestButton.addEventListener("click", requestSubstitution);
+    substitutionTarget.addEventListener("change", refreshSubstitutionAvailability);
 
     // ---- Drawing --------------------------------------------------------
 
@@ -889,6 +1073,16 @@
         window.addEventListener("keyup", onKeyUp);
     }
 
+    function unbindInput() {
+        if (!inputBound) return;
+        inputBound = false;
+        canvas.removeEventListener("pointerdown", onPointerDown);
+        canvas.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+        window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("keyup", onKeyUp);
+    }
+
     const moveTimer = setInterval(() => {
         if (spectator || !state || selectedId === null || predicted === null) return;
         const view = currentViewInput();
@@ -1003,11 +1197,13 @@
         socket.off("game:goal", onGoal);
         socket.off("game:kicked", onKicked);
         socket.off("game:powerup", onPowerup);
-        canvas.removeEventListener("pointerdown", onPointerDown);
-        canvas.removeEventListener("pointermove", onPointerMove);
-        window.removeEventListener("pointerup", onPointerUp);
-        window.removeEventListener("keydown", onKeyDown);
-        window.removeEventListener("keyup", onKeyUp);
+        socket.off("game:substitution-update", onSubstitutionUpdate);
+        socket.off("game:substitution-notice", onSubstitutionNotice);
+        socket.off("game:substitution-role", onSubstitutionRole);
+        socket.off("game:substituted", onSubstituted);
+        substitutionRequestButton.removeEventListener("click", requestSubstitution);
+        substitutionTarget.removeEventListener("change", refreshSubstitutionAvailability);
+        unbindInput();
         window.removeEventListener("resize", fitOrientation);
         window.removeEventListener(orientationEvent, onOrientation);
         window.removeEventListener("devicemotion", onMotion);

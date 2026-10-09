@@ -252,6 +252,69 @@
         transform: translateX(-50%) translateY(0);
     }
 
+    .pitch-shell #substitution-panel {
+        width: min(560px, calc(100vw - 24px));
+        margin: 8px auto;
+        padding: 10px 12px;
+        color: #fff;
+        background: rgba(18, 25, 24, 0.94);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 6px;
+        text-align: left;
+        position: relative;
+        z-index: 12;
+    }
+
+    .pitch-shell .substitution-form,
+    .pitch-shell .substitution-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .pitch-shell .substitution-form select {
+        min-width: 160px;
+        max-width: 100%;
+        padding: 7px 9px;
+        color: #fff;
+        background: #263b36;
+        border: 1px solid #80928b;
+        border-radius: 4px;
+    }
+
+    .pitch-shell .substitution-button {
+        padding: 7px 10px;
+        color: #fff;
+        background: #315f50;
+        border: 1px solid #719b86;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .pitch-shell .substitution-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pitch-shell .substitution-request {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-top: 8px;
+        margin-top: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .pitch-shell #substitution-message {
+        min-height: 1.2em;
+        margin: 6px 0 0;
+        color: #d6e3db;
+        font-size: 0.9rem;
+    }
+
     /* ---- Goal confetti (client-only cosmetic) ---------------------------- */
 
     .pitch-shell #confetti {
@@ -285,6 +348,15 @@
         <span id="score-b" class="team-b">0 Team 2</span>
         <span id="match-clock" hidden>0:00</span>
     </div>
+    <section id="substitution-panel" hidden aria-label="Substitution controls">
+        <div id="substitution-form" class="substitution-form" hidden>
+            <label for="substitution-target">Request to replace</label>
+            <select id="substitution-target"></select>
+            <button id="substitution-request" class="substitution-button" type="button">Request Substitution</button>
+        </div>
+        <div id="substitution-requests"></div>
+        <p id="substitution-message" aria-live="polite"></p>
+    </section>
     <button id="enable-motion" hidden>Enable motion controls</button>
     <div id="pitch-container">
         <div class="stadium crowd"></div>
