@@ -315,6 +315,72 @@
         font-size: 0.9rem;
     }
 
+    .pitch-shell #prediction-panel {
+        width: min(560px, calc(100vw - 24px));
+        margin: 8px auto;
+        padding: 10px 12px;
+        color: #fff;
+        background: rgba(18, 25, 24, 0.94);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 6px;
+        text-align: left;
+        position: relative;
+        z-index: 12;
+    }
+
+    .pitch-shell #prediction-panel h2 {
+        margin: 0 0 4px;
+        font-size: 1rem;
+    }
+
+    .pitch-shell #prediction-panel p {
+        margin: 5px 0;
+    }
+
+    .pitch-shell .prediction-form {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .pitch-shell .prediction-form select {
+        min-width: 180px;
+        max-width: 100%;
+        padding: 7px 9px;
+        color: #fff;
+        background: #263b36;
+        border: 1px solid #80928b;
+        border-radius: 4px;
+    }
+
+    .pitch-shell .prediction-button {
+        padding: 7px 10px;
+        color: #fff;
+        background: #315f50;
+        border: 1px solid #719b86;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .pitch-shell .prediction-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pitch-shell #prediction-message {
+        min-height: 1.2em;
+        margin: 6px 0 0;
+        color: #d6e3db;
+        font-size: 0.9rem;
+    }
+
+    .pitch-shell #prediction-history {
+        margin: 6px 0 0;
+        padding-left: 20px;
+        font-size: 0.85rem;
+    }
+
     /* ---- Goal confetti (client-only cosmetic) ---------------------------- */
 
     .pitch-shell #confetti {
@@ -368,6 +434,19 @@
         <div id="countdown" hidden></div>
         <div id="powerup-toast"></div>
     </div>
+    <section id="prediction-panel" hidden aria-label="Next goal prediction">
+        <h2>PREDICT THE NEXT GOAL</h2>
+        <p>Who scores next?</p>
+        <div class="prediction-form">
+            <label for="prediction-target">Player or team</label>
+            <select id="prediction-target"></select>
+            <button id="prediction-submit" class="prediction-button" type="button">Submit prediction</button>
+        </div>
+        <p id="prediction-rules"></p>
+        <p id="prediction-balance"></p>
+        <p id="prediction-message" aria-live="polite"></p>
+        <ol id="prediction-history" aria-label="Recent prediction results"></ol>
+    </section>
     <div id="gauge">
         <div id="gauge-fill"></div>
     </div>

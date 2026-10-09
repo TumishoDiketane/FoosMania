@@ -40,6 +40,13 @@
     const substitutionRequestButton = document.getElementById("substitution-request");
     const substitutionRequests = document.getElementById("substitution-requests");
     const substitutionMessage = document.getElementById("substitution-message");
+    const predictionPanel = document.getElementById("prediction-panel");
+    const predictionTarget = document.getElementById("prediction-target");
+    const predictionSubmit = document.getElementById("prediction-submit");
+    const predictionRules = document.getElementById("prediction-rules");
+    const predictionBalance = document.getElementById("prediction-balance");
+    const predictionMessage = document.getElementById("prediction-message");
+    const predictionHistory = document.getElementById("prediction-history");
 
     const FALLBACK_COLORS = { home: "#e74c3c", away: "#3498db" }; // until kits resolve
     const MAX_FLICK_ACCEL = 25; // m/s^2 that counts as a full-power kick
@@ -71,6 +78,8 @@
     let inputBound = false;
     let socketId = null;
     let substitutionData = null;
+    let predictionData = null;
+    let predictionTargetsSignature = null;
 
     // Kick-in-progress (mobile drag OR desktop Space charge).
     let aiming = false; // mobile: pointer down, dragging an aim
@@ -168,6 +177,88 @@
         );
         const canRequest = spectator && matchIsLive() && !ownRequest && hasCapacity;
         substitutionRequestButton.disabled = !canRequest || !substitutionTarget.value;
+    }
+
+    function renderPredictionTargets() {
+        if (!predictionTarget) return;
+        const players = [...new Set((state?.pucks ?? [])
+            .map((puck) => puck.username)
+            .filter((username) => username !== null))];
+        const signature = JSON.stringify([players, teamNames]);
+        if (signature === predictionTargetsSignature) return;
+        predictionTargetsSignature = signature;
+        const selected = predictionTarget.value;
+        predictionTarget.replaceChildren();
+        const playerGroup = document.createElement("optgroup");
+        playerGroup.label = "Players";
+        for (const username of players) {
+            const option = document.createElement("option");
+            option.value = `player:${username}`;
+            option.textContent = username;
+            playerGroup.append(option);
+        }
+        predictionTarget.append(playerGroup);
+
+        const teamGroup = document.createElement("optgroup");
+        teamGroup.label = "Teams";
+        for (const team of ["home", "away"]) {
+            const option = document.createElement("option");
+            option.value = `team:${team}`;
+            option.textContent = teamNames[team];
+            teamGroup.append(option);
+        }
+        predictionTarget.append(teamGroup);
+        if ([...predictionTarget.options].some((option) => option.value === selected)) {
+            predictionTarget.value = selected;
+        }
+    }
+
+    function renderPredictionHistory() {
+        predictionHistory.replaceChildren();
+        for (const entry of (predictionData?.history ?? []).slice(-5).reverse()) {
+            const item = document.createElement("li");
+            const outcome = entry.outcome === "void" ? "void, team result only" : entry.outcome;
+            const choice = entry.targetName ?? (entry.type === "player" ? entry.target : teamNames[entry.target] ?? entry.target);
+            const delta = Number(entry.pointsChange ?? 0);
+            item.textContent = `${choice}: ${outcome} (${delta > 0 ? "+" : ""}${delta} points)`;
+            predictionHistory.append(item);
+        }
+    }
+
+    function refreshPredictionPanel() {
+        if (!predictionPanel) return;
+        predictionPanel.hidden = !spectator;
+        if (!spectator || !predictionData) return;
+        const rules = predictionData.rules;
+        predictionRules.textContent = `Cost: ${rules.cost} points. Correct: +${rules.reward}. Incorrect: -${rules.penalty}.`;
+        predictionBalance.textContent = `Points: ${predictionData.points}`;
+        if (spectator) renderPredictionTargets();
+        const canPredict = spectator && matchIsLive() && predictionData.pending === null && predictionData.points >= rules.cost;
+        predictionTarget.disabled = !canPredict;
+        predictionSubmit.disabled = !canPredict || !predictionTarget.value;
+        renderPredictionHistory();
+    }
+
+    async function submitPrediction() {
+        if (!predictionTarget.value) return;
+        const separator = predictionTarget.value.indexOf(":");
+        const type = predictionTarget.value.slice(0, separator);
+        const target = predictionTarget.value.slice(separator + 1);
+        predictionSubmit.disabled = true;
+        const response = await socket.emitWithAck("game:prediction", { type, target });
+        if (response.success) {
+            predictionData = { ...predictionData, ...response, pending: response.prediction };
+            predictionMessage.textContent = "Prediction locked until the next goal.";
+        } else {
+            const messages = {
+                match_not_playing: "Predictions are available during live play.",
+                prediction_exists: "Your prediction is already locked for this goal.",
+                insufficient_points: "You do not have enough points to predict.",
+                invalid_target: "That player or team is no longer available.",
+            };
+            predictionMessage.textContent = messages[response.reason] ?? "Prediction could not be submitted.";
+        }
+        refreshPredictionPanel();
     }
 
     function renderSubstitutionPanel() {
@@ -299,6 +390,7 @@
         started = info.started;
         spectator = Boolean(info.spectator);
         substitutionData = info.substitutions;
+        predictionData = spectator ? info.prediction : null;
         if (info.state) state = info.state;
         if (selectedId === null && myPuckIds.length) {
             selectedId = myPuckIds[0];
@@ -322,6 +414,7 @@
 
         updateHint();
         renderSubstitutionPanel();
+        refreshPredictionPanel();
     }
 
     function resolveMyTeam() {
@@ -421,6 +514,7 @@
             updateHint();
         }
         refreshSubstitutionAvailability();
+        refreshPredictionPanel();
     }
 
     // Match over: stash the summary for the stats view and go there.
@@ -451,6 +545,7 @@
 
     function onSubstitutionRole(data) {
         spectator = Boolean(data.spectator);
+        predictionData = spectator ? data.prediction : null;
         myPuckIds = data.puckIds ?? [];
         selectedId = myPuckIds[0] ?? null;
         predicted = null;
@@ -475,6 +570,7 @@
         fitOrientation();
         onState(data.state);
         renderSubstitutionPanel();
+        refreshPredictionPanel();
         updateHint();
         substitutionMessage.textContent = spectator ? "You are now spectating." : "Substitution approved. You are in the match.";
     }
@@ -499,6 +595,21 @@
         playSound("goal");
         confettiBurst();
         showGoalOverlay();
+    }
+
+    function onPredictionResult(result) {
+        predictionData = {
+            ...predictionData,
+            points: result.points,
+            pending: null,
+            history: [...(predictionData?.history ?? []), result],
+        };
+        predictionMessage.textContent = result.outcome === "void"
+            ? "Team result only. Your player prediction was voided and refunded."
+            : result.outcome === "expired"
+                ? "Match ended. Your pending prediction was refunded."
+                : `${result.outcome === "correct" ? "Correct" : "Incorrect"}: ${result.pointsChange > 0 ? "+" : ""}${result.pointsChange} points.`;
+        refreshPredictionPanel();
     }
 
     function onKicked() {
@@ -548,6 +659,7 @@
     socket.on("game:state", onState);
     socket.on("game:ended", onEnded);
     socket.on("game:goal", onGoal);
+    socket.on("game:prediction-result", onPredictionResult);
     socket.on("game:kicked", onKicked);
     socket.on("game:powerup", onPowerup);
     socket.on("game:substitution-update", onSubstitutionUpdate);
@@ -557,6 +669,7 @@
 
     substitutionRequestButton.addEventListener("click", requestSubstitution);
     substitutionTarget.addEventListener("change", refreshSubstitutionAvailability);
+    predictionSubmit.addEventListener("click", submitPrediction);
 
     // ---- Drawing --------------------------------------------------------
 
@@ -1195,6 +1308,7 @@
         socket.off("game:state", onState);
         socket.off("game:ended", onEnded);
         socket.off("game:goal", onGoal);
+        socket.off("game:prediction-result", onPredictionResult);
         socket.off("game:kicked", onKicked);
         socket.off("game:powerup", onPowerup);
         socket.off("game:substitution-update", onSubstitutionUpdate);
@@ -1203,6 +1317,7 @@
         socket.off("game:substituted", onSubstituted);
         substitutionRequestButton.removeEventListener("click", requestSubstitution);
         substitutionTarget.removeEventListener("change", refreshSubstitutionAvailability);
+        predictionSubmit.removeEventListener("click", submitPrediction);
         unbindInput();
         window.removeEventListener("resize", fitOrientation);
         window.removeEventListener(orientationEvent, onOrientation);
