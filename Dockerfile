@@ -4,7 +4,7 @@
 FROM node:22-alpine
 
 # Links the GHCR package to this repo so the workflow's GITHUB_TOKEN can push.
-LABEL org.opencontainers.image.source="https://github.com/bbd-vac-week-2026/table-soccer-group-2"
+LABEL org.opencontainers.image.source="https://github.com/TumishoDiketane/FoosMania"
 
 ENV NODE_ENV=production
 WORKDIR /app

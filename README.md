@@ -103,6 +103,8 @@ Stadium side panels use each planet team's kit colors.
 
 | Member | GitHub |
 |---|---|
+|Tumisho Diketane|https://github.com/TumishoDiketane|
+|Lesiba Ledwaba|https://github.com/lesib-a|
 
 ## License
 
