@@ -4,7 +4,7 @@ const SETUP_DURATION_MS = 10000;
 const CHOICE_DURATION_MS = 15000;
 const RESULT_PAUSE_MS = 3200;
 const FINAL_RESULT_PAUSE_MS = 3200;
-const STANDARD_ATTEMPTS_PER_TEAM = 5;
+const STANDARD_ATTEMPTS_PER_TEAM = 2;
 
 const shootouts = new WeakMap();
 
@@ -40,7 +40,9 @@ function schedule(state, callback, delay) {
 function publicState(state) {
 	return {
 		phase: state.phase,
-		notice: state.phase === 'penalty_setup' ? 'MATCH TIED. Penalty shootout starting. Each team gets 5 attempts.' : null,
+		notice: state.phase === 'penalty_setup'
+			? `MATCH TIED. Penalty shootout starting. Each team gets ${STANDARD_ATTEMPTS_PER_TEAM} attempts.`
+			: null,
 		setupEndsAt: state.phase === 'penalty_setup' ? state.setupEndsAt : null,
 		goalkeepers: { ...state.goalkeepers },
 		players: {

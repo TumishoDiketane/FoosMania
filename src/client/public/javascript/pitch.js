@@ -55,6 +55,7 @@
     const shootoutRoundLabel = document.getElementById("shootout-round-label");
     const shootoutMatchupLabel = document.getElementById("shootout-matchup-label");
     const duelStage = document.getElementById("duel-stage");
+    const duelPulse = document.getElementById("duel-pulse");
     const duelKickerAvatar = document.getElementById("duel-kicker-avatar");
     const duelKickerName = document.getElementById("duel-kicker-name");
     const duelKickerTeam = document.getElementById("duel-kicker-team");
@@ -296,6 +297,7 @@
         if (shootoutPanel.hidden) return;
 
         const data = shootoutData;
+        const standardAttemptsPerTeam = data.standardAttemptsPerTeam ?? 2;
         const secondsLeft = data.phase === "penalty_setup"
             ? Math.max(0, Math.ceil((data.setupEndsAt - Date.now()) / 1000))
             : null;
@@ -321,12 +323,12 @@
         displayedPenaltyScore ??= data.penaltyScore;
         shootoutPenaltyScore.textContent = `${displayedPenaltyScore.home} — ${displayedPenaltyScore.away}`;
         shootoutRoundLabel.textContent = data.phase === "penalty_setup"
-            ? "FIVE ATTEMPTS EACH"
+            ? `${standardAttemptsPerTeam} ATTEMPTS EACH`
             : displayAttempt == null
                 ? "SHOOTOUT IN PROGRESS"
                 : data.suddenDeath
-                    ? `SUDDEN DEATH — ROUND ${Math.max(1, Math.ceil((displayAttempt.number - 10) / 2))}`
-                    : `ATTEMPT ${displayAttempt.number} · ROUND ${Math.ceil(displayAttempt.number / 2)} OF 5`;
+                    ? `SUDDEN DEATH — ROUND ${Math.max(1, Math.ceil((displayAttempt.number - standardAttemptsPerTeam * 2) / 2))}`
+                    : `ATTEMPT ${displayAttempt.number} · ROUND ${Math.ceil(displayAttempt.number / 2)} OF ${standardAttemptsPerTeam}`;
         shootoutMatchupLabel.textContent = attackingTeam == null
             ? `${teamNames.home} vs ${teamNames.away}`
             : `${teamNames[attackingTeam]} attacking · ${teamNames[defendingTeam]} defending`;
@@ -421,6 +423,7 @@
         duelStage.style.removeProperty("--keeper-dive");
         duelStage.style.removeProperty("--keeper-tilt");
         for (const direction of ["left", "middle", "right"]) {
+            document.querySelector(`.duel-lane[data-direction="${direction}"]`)?.classList.remove("result-goal", "result-save");
             document.getElementById(`duel-kicker-marker-${direction}`).textContent = "SHOT";
             document.getElementById(`duel-keeper-marker-${direction}`).textContent = "SAVE";
         }
@@ -856,12 +859,17 @@
         if (result.goalkeeperChoice) {
             document.getElementById(`duel-keeper-marker-${result.goalkeeperChoice}`).textContent = "SAVE";
         }
-        const travelDirection = result.team === "home" ? 1 : -1;
-        const laneOffset = { left: -20, middle: 0, right: 20 }[result.kickerChoice] ?? 0;
+        const targetDirection = result.kickerChoice ?? "middle";
+        const targetLane = shootoutDirectionButtons.find((button) => button.dataset.direction === targetDirection);
+        const pulseBounds = duelPulse.getBoundingClientRect();
+        const laneBounds = targetLane?.getBoundingClientRect() ?? pulseBounds;
+        const flightX = laneBounds.left + laneBounds.width / 2 - (pulseBounds.left + pulseBounds.width / 2);
+        const flightY = laneBounds.top + laneBounds.height / 2 - (pulseBounds.top + pulseBounds.height / 2);
         const keeperOffset = { left: -56, middle: 0, right: 56 }[result.goalkeeperChoice] ?? 0;
-        duelStage.style.setProperty("--flight-x", `${travelDirection * (60 + laneOffset)}vw`);
-        duelStage.style.setProperty("--flight-y", `${result.kickerChoice === "left" ? -10 : result.kickerChoice === "right" ? 10 : 0}px`);
-        duelStage.style.setProperty("--keeper-dive", `${-travelDirection * keeperOffset}px`);
+        const keeperDirection = result.team === "home" ? 1 : -1;
+        duelStage.style.setProperty("--flight-x", `${flightX}px`);
+        duelStage.style.setProperty("--flight-y", `${flightY}px`);
+        duelStage.style.setProperty("--keeper-dive", `${keeperDirection * keeperOffset}px`);
         duelStage.style.setProperty("--keeper-tilt", result.goalkeeperChoice === "left" ? "-18deg" : result.goalkeeperChoice === "right" ? "18deg" : "0deg");
 
         scheduleCinematic(() => {
@@ -879,6 +887,10 @@
         }, 1280);
         scheduleCinematic(() => {
             duelStage.classList.add(result.scored ? "cinematic-goal" : "cinematic-save");
+            if (result.kickerChoice) {
+                const shotLane = shootoutDirectionButtons.find((button) => button.dataset.direction === result.kickerChoice);
+                shotLane?.classList.add(result.scored ? "result-goal" : "result-save");
+            }
             displayedPenaltyScore = result.penaltyScore;
             shootoutPenaltyScore.textContent = `${displayedPenaltyScore.home} — ${displayedPenaltyScore.away}`;
             shootoutStatus.textContent = result.scored ? "GOAL · GATE BREACHED" : "SAVED · GATE HELD";

@@ -165,28 +165,29 @@ test('attempt timeout treats an unsubmitted kick as a miss', async () => {
 	assert.deepEqual(result.penaltyScore, { home: 0, away: 0 });
 });
 
-test('five tied rounds proceed to sudden death and finish on a split round', async () => {
+test('two tied rounds proceed to sudden death and finish on a split round', async () => {
 	const room = makeRoom();
 	const io = makeIo();
 	let completed;
 	const finished = new Promise((resolve) => { completed = resolve; });
 	const firstAttempt = waitForAttempt(io, 1);
 	startShootout(io, room, completed, { setupDurationMs: 1, choiceDurationMs: 1000, resultPauseMs: 0, finalResultPauseMs: 0 });
-	await firstAttempt;
+	const setup = await firstAttempt;
+	assert.equal(setup.standardAttemptsPerTeam, 2);
 
-	for (let number = 1; number <= 12; number++) {
+	for (let number = 1; number <= 6; number++) {
 		const attempt = getShootoutSnapshot(room).attempt;
-		const kickDirection = number === 11 ? 'left' : 'middle';
-		const saveDirection = number === 11 ? 'middle' : 'middle';
+		const kickDirection = number === 5 ? 'left' : 'middle';
+		const saveDirection = 'middle';
 		assert.equal(choose(io, room, attempt.kicker, kickDirection).success, true);
 		assert.equal(choose(io, room, attempt.goalkeeper, saveDirection).success, true);
-		if (number < 12) await waitForAttempt(io, number + 1);
+		if (number < 6) await waitForAttempt(io, number + 1);
 	}
 
 	const result = await finished;
 	assert.equal(result.winner, 'home');
-	assert.equal(result.attempts.length, 12);
-	assert.equal(result.attempts[9].scored, false);
-	assert.equal(result.attempts[10].scored, true);
+	assert.equal(result.attempts.length, 6);
+	assert.equal(result.attempts[3].scored, false);
+	assert.equal(result.attempts[4].scored, true);
 	assert.equal(result.suddenDeath, true);
 });
