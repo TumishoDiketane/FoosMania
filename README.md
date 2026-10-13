@@ -1,4 +1,4 @@
-# Foofa-Street
+# FoosMania
 
 [![Node.js](https://img.shields.io/badge/Node.js-ESM-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
@@ -7,7 +7,7 @@
 [![Deploy](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render&logoColor=white)](./DEPLOYMENT.md)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](#license)
 
-Multiplayer browser foosball. The match plays on a shared screen; every player uses their phone as a controller. Tilt to move, drag-and-flick to shoot, no app to install.
+Multiplayer browser Table Soccer Game. The match plays on a shared screen; every player uses their phone as a controller. Tilt to move, drag-and-flick to shoot, collect power ups to level up.
 
 Built with Node/Express + Socket.IO and vanilla JS. No build step, no framework, no database — the entire game runs in server memory.
 
@@ -28,7 +28,7 @@ Built with Node/Express + Socket.IO and vanilla JS. No build step, no framework,
 1. Open the site on a shared screen (laptop, TV) and on each player's phone.
 2. Enter a username.
 3. One player **creates a room** and shares the 6-letter code.
-4. Everyone else **joins** with the code and picks a team.
+4. Everyone else **joins** with the Qr code/ six digit code and picks a team.
 5. The host adjusts settings and presses **Start**.
 6. Play from your phone — tilt to move, drag and release to shoot.
 
