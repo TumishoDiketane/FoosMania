@@ -17,6 +17,8 @@
     const winnerLine = document.getElementById("winner-line");
     const myStatsSection = document.getElementById("my-stats-section");
     const bootList = document.getElementById("boot-list");
+    const predictionStatsSection = document.getElementById("prediction-stats-section");
+    const predictionList = document.getElementById("prediction-list");
     const homeButton = document.getElementById("home-button");
 
     const kits = resolveKits(summary.teamNames.home, summary.teamNames.away);
@@ -101,6 +103,20 @@
         row.append(rank, player, goals);
         bootList.append(row);
     });
+
+    const predictionStats = summary.predictions ?? [];
+    predictionStatsSection.hidden = predictionStats.length === 0;
+    for (const entry of predictionStats) {
+        const row = document.createElement("div");
+        row.className = "prediction-stat-row";
+        const spectator = document.createElement("strong");
+        spectator.textContent = entry.username;
+        const record = document.createElement("span");
+        const pointsChange = Number(entry.pointsChange ?? 0);
+        record.textContent = `${entry.correct} correct, ${entry.incorrect} incorrect, ${entry.void} void, ${entry.expired ?? 0} expired · ${pointsChange > 0 ? "+" : ""}${pointsChange} points`;
+        row.append(spectator, record);
+        predictionList.append(row);
+    }
 
     // The match is done: leave the room and head home. Use a hard navigation
     // here so the redirect still works even if the socket round-trip is slow.

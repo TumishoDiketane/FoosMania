@@ -7,7 +7,7 @@
     "start": "node src/server/index.js",
     "dev": "nodemon src/server/index.js",
     "check": "git ls-files '*.js' | xargs -n1 node --check",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test"
   },
   "repository": {
     "type": "git",

@@ -25,6 +25,8 @@
     const settingsPanel = document.getElementById("settings-panel");
     const settingsLock = document.getElementById("settings-lock");
     const durationSelect = document.getElementById("setting-duration");
+    const substitutionApprovalSelect = document.getElementById("setting-substitution-approval");
+    const substitutionsPerTeamSelect = document.getElementById("setting-substitutions-per-team");
 
     let roomCodeForCopying = null;
     let lastRenderedCode = null;
@@ -109,13 +111,19 @@
         socket.emit("room:update-settings", {
             settings: {
                 maxDurationSeconds: durationSelect.value === "" ? null : Number(durationSelect.value),
+                substitutionApproval: substitutionApprovalSelect.value,
+                substitutionsPerTeam: Number(substitutionsPerTeamSelect.value),
             },
         });
     }
 
     durationSelect.addEventListener("change", collectAndSendSettings);
+    substitutionApprovalSelect.addEventListener("change", collectAndSendSettings);
+    substitutionsPerTeamSelect.addEventListener("change", collectAndSendSettings);
 
     const durationDisplay = document.getElementById("setting-duration-display");
+    const substitutionApprovalDisplay = document.getElementById("setting-substitution-approval-display");
+    const substitutionsPerTeamDisplay = document.getElementById("setting-substitutions-per-team-display");
 
     const DURATION_LABELS = { "": "No limit", "60": "1 minute", "120": "2 minutes", "180": "3 minutes", "300": "5 minutes", "600": "10 minutes" };
 
@@ -131,11 +139,17 @@
 
         const settings = room.settings ?? {};
         const durationVal = settings.maxDurationSeconds == null ? "" : String(settings.maxDurationSeconds);
+        const approvalVal = settings.substitutionApproval ?? "player";
+        const substitutionsVal = String(settings.substitutionsPerTeam ?? 3);
 
         durationSelect.value = durationVal;
+        substitutionApprovalSelect.value = approvalVal;
+        substitutionsPerTeamSelect.value = substitutionsVal;
 
         // Update read-only duration display
         durationDisplay.textContent = DURATION_LABELS[durationVal] ?? durationVal;
+        substitutionApprovalDisplay.textContent = approvalVal === "host" ? "Host approval" : "Player approval";
+        substitutionsPerTeamDisplay.textContent = substitutionsVal === "0" ? "None" : substitutionsVal;
     }
 
 

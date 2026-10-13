@@ -8,12 +8,15 @@ export function createRoomModel(changes = {}) {
 
         users: {}, // socket ID, user model
         spectators: {}, // socket ID -> { username }; read-only members
+        substitutions: {}, // request ID -> pending/expired substitution request
         hostUserId: undefined, // socket ID of host user socket connection
 
         // host-editable match settings, broadcast with room:update
         settings: {
             maxDurationSeconds: 60,
             goalsToWin: 5,
+            substitutionApproval: 'player',
+            substitutionsPerTeam: 3,
             // label/color ride along so lobby UIs hardcode nothing; the
             // host only ever edits enabled/spawnChance
             powerups: Object.fromEntries(
