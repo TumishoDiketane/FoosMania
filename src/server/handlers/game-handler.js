@@ -209,9 +209,15 @@ export function serializeState(room) {
 			y: puck.y,
 			homeX: puck.homeX,
 			homeY: puck.homeY,
+				facingAngle: puck.inputX === 0 && puck.inputY === 0
+					? (puck.team === 'home' ? 0 : Math.PI)
+					: Math.atan2(puck.inputY, puck.inputX),
+				moving: puck.inputX !== 0 || puck.inputY !== 0,
 			// active powerup effects, as booleans (client clocks differ)
 			speedActive: puck.speedUntil > now,
 			phonkActive: puck.phonkUntil > now,
+				speedRemainingMs: Math.max(0, puck.speedUntil - now),
+				phonkRemainingMs: Math.max(0, puck.phonkUntil - now),
 			powershot: puck.powershot,
 		})),
 		ball: { x: game.ball.x, y: game.ball.y, vx: game.ball.vx, vy: game.ball.vy },
@@ -227,6 +233,9 @@ export function serializeState(room) {
 			home: goalHalfWidth(game, 'home', now),
 			away: goalHalfWidth(game, 'away', now),
 		},
+		goalBoost: game.goalBoost !== null && game.goalBoost.until > now
+			? { team: game.goalBoost.goal, remainingMs: game.goalBoost.until - now }
+			: null,
 	};
 }
 

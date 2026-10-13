@@ -34,6 +34,13 @@
     const container = document.getElementById("pitch-container");
     const confettiHolder = document.getElementById("confetti");
     const countdownEl = document.getElementById("countdown");
+    const mobileControls = document.getElementById("mobile-controls");
+    const controlModeButtons = [...document.querySelectorAll("[data-control-mode]")];
+    const joystickBase = document.getElementById("joystick-base");
+    const joystickKnob = document.getElementById("joystick-knob");
+    const buttonPad = document.getElementById("button-pad");
+    const directionButtons = [...document.querySelectorAll("[data-move-direction]")];
+    const chargeReadout = document.getElementById("gauge-value");
     const substitutionPanel = document.getElementById("substitution-panel");
     const substitutionForm = document.getElementById("substitution-form");
     const substitutionTarget = document.getElementById("substitution-target");
@@ -83,6 +90,8 @@
     const SMOOTH_BALL_MS = 40; // faster for the ball so hard kicks don't visibly lag
     const SMOOTH_SNAP = 80; // gap beyond this = teleport (goal reset, rejoin)
     const TACKLE_SOUND_CHANCE = 0.3;
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const touchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0 || window.matchMedia?.("(pointer: coarse)").matches;
 
     let constants = null; // sent by the server in the game:join ack
     let teamNames = { home: "Home", away: "Away" };
@@ -119,6 +128,11 @@
 
     let tiltX = 0; // screen-frame tilt, degrees; 0 = phone flat on a table
     let tiltY = 0;
+    let controlMode = readControlPreference();
+    let motionEnabled = false;
+    let joystickPointerId = null;
+    let joystickInput = { x: 0, y: 0 };
+    const pressedDirections = new Set();
     const keys = new Set(); // held movement keys (desktop)
     let rafId = null;
     let lastFrameAt = null;
@@ -130,6 +144,19 @@
     const smoothPucks = new Map(); // puck id -> displayed {x, y}, eased toward the server's
     let smoothBall = null; // displayed ball position, eased the same way
     let countdownShown = 0; // countdown number currently animating, 0 = hidden
+
+    let lastBallSnapshot = null;
+    const ballTrail = [];
+    const puckReactionUntil = new Map();
+
+    function readControlPreference() {
+        try {
+            const saved = localStorage.getItem("foosmania-control-mode");
+            return ["tilt", "joystick", "buttons"].includes(saved) ? saved : "tilt";
+        } catch {
+            return "tilt";
+        }
+    }
 
     function updateFlip() {
         flip = portrait && myTeam === "home";
@@ -609,12 +636,12 @@
 
         if (!spectator && (state?.phase ?? "regular") === "regular") {
             bindInput();
-            maybeShowMotionButton();
         } else {
             enableBtn.hidden = true;
             gauge.hidden = true;
         }
 
+        updateMobileControls();
         updateHint();
         renderSubstitutionPanel();
         refreshPredictionPanel();
@@ -680,6 +707,15 @@
 
     function onState(s) {
         state = s;
+        const now = Date.now();
+        if (lastBallSnapshot && !reduceMotion && Math.hypot(s.ball.vx, s.ball.vy) >= 18) {
+            const moved = Math.hypot(s.ball.x - lastBallSnapshot.x, s.ball.y - lastBallSnapshot.y);
+            if (moved > 1) {
+                ballTrail.push({ x: lastBallSnapshot.x, y: lastBallSnapshot.y, at: now });
+                if (ballTrail.length > 10) ballTrail.shift();
+            }
+        }
+        lastBallSnapshot = { x: s.ball.x, y: s.ball.y };
         if ((s.phase ?? "regular") !== "regular") {
             keys.clear();
             inputDir = { x: 0, y: 0 };
@@ -690,8 +726,8 @@
         } else if (!spectator) {
             bindInput();
             gauge.hidden = false;
-            maybeShowMotionButton();
         }
+        updateMobileControls();
         resolveMyTeam();
         scoreA.textContent = `${teamNames.home} ${s.score.home}`;
         scoreB.textContent = `${s.score.away} ${teamNames.away}`;
@@ -706,6 +742,9 @@
                     playSound("tackle");
                 }
             }
+        }
+        if (s.controllingPuckId !== null && s.controllingPuckId !== prevControllerId) {
+            puckReactionUntil.set(s.controllingPuckId, now + 260);
         }
         prevControllerId = s.controllingPuckId;
         prevControllerTeam = s.controllingPuckId === null
@@ -781,9 +820,9 @@
         } else {
             bindInput();
             gauge.hidden = false;
-            maybeShowMotionButton();
         }
 
+        updateMobileControls();
         resolveMyTeam();
         fitOrientation();
         onState(data.state);
@@ -799,6 +838,7 @@
 
     const goalOverlay = document.getElementById("goal-overlay");
     let goalOverlayTimer = null;
+    let goalFlashTimer = null;
 
     function showGoalOverlay() {
         if (!goalOverlay) return;
@@ -812,6 +852,9 @@
     function onGoal() {
         playSound("goal");
         confettiBurst();
+        container.classList.add("goal-flash");
+        clearTimeout(goalFlashTimer);
+        goalFlashTimer = setTimeout(() => container.classList.remove("goal-flash"), 520);
         showGoalOverlay();
     }
 
@@ -973,6 +1016,45 @@
         ctx.fillStyle = "#2e8b57";
         ctx.fillRect(0, 0, FIELD.width, FIELD.height);
 
+        const stripeWidth = FIELD.width / 10;
+        for (let stripe = 0; stripe < 10; stripe++) {
+            ctx.fillStyle = stripe % 2 === 0 ? "rgba(255, 255, 255, 0.035)" : "rgba(0, 0, 0, 0.035)";
+            ctx.fillRect(stripe * stripeWidth, 0, stripeWidth, FIELD.height);
+        }
+
+        const edgeShade = ctx.createRadialGradient(
+            FIELD.width / 2, FIELD.height / 2, FIELD.height * 0.18,
+            FIELD.width / 2, FIELD.height / 2, FIELD.width * 0.62
+        );
+        edgeShade.addColorStop(0, "rgba(0, 0, 0, 0)");
+        edgeShade.addColorStop(1, "rgba(0, 0, 0, 0.2)");
+        ctx.fillStyle = edgeShade;
+        ctx.fillRect(0, 0, FIELD.width, FIELD.height);
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(220, 255, 235, 0.13)";
+        ctx.lineWidth = 1;
+        for (const goalX of [5, FIELD.width - 85]) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(goalX, FIELD.height / 2 - 80, 80, 160);
+            ctx.clip();
+            for (let x = goalX; x <= goalX + 80; x += 12) {
+                ctx.beginPath();
+                ctx.moveTo(x, FIELD.height / 2 - 80);
+                ctx.lineTo(x, FIELD.height / 2 + 80);
+                ctx.stroke();
+            }
+            for (let y = FIELD.height / 2 - 80; y <= FIELD.height / 2 + 80; y += 12) {
+                ctx.beginPath();
+                ctx.moveTo(goalX, y);
+                ctx.lineTo(goalX + 80, y);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+        ctx.restore();
+
         ctx.strokeStyle = "#fff";
         ctx.lineWidth = 2;
         ctx.strokeRect(5, 5, FIELD.width - 10, FIELD.height - 10);
@@ -1042,23 +1124,41 @@
         ctx.stroke();
     }
 
+    function drawPlayerFigure(puck, pos, radius) {
+        const angle = puck.facingAngle ?? (puck.team === "home" ? 0 : Math.PI);
+        ctx.save();
+        ctx.translate(pos.x, pos.y);
+        ctx.rotate(angle);
+
+        ctx.fillStyle = "rgba(10, 20, 22, 0.72)";
+        ctx.beginPath();
+        ctx.ellipse(-radius * 0.22, 0, radius * 0.3, radius * 0.38, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#f2d0a8";
+        ctx.strokeStyle = "rgba(15, 22, 25, 0.85)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(radius * 0.48, 0, radius * 0.31, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.moveTo(radius * 0.72, -radius * 0.14);
+        ctx.lineTo(radius * 0.98, 0);
+        ctx.lineTo(radius * 0.72, radius * 0.14);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
     // Active-powerup rings around a puck (read straight from the state flags).
     function drawEffects(puck, pos) {
         const r = constants.PUCK_RADIUS;
-        if (puck.phonkActive) {
-            ctx.beginPath();
-            ctx.arc(pos.x, pos.y, r + 7, 0, Math.PI * 2);
-            ctx.strokeStyle = `hsl(${(Date.now() / 8) % 360}, 100%, 60%)`;
-            ctx.lineWidth = 3;
-            ctx.stroke();
-        }
-        if (puck.speedActive) {
-            ctx.beginPath();
-            ctx.arc(pos.x, pos.y, r + 4, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(51, 221, 255, 0.9)";
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
+        const powerups = constants.POWERUPS;
+        drawEffectTimer(pos, r + 5, puck.speedRemainingMs, powerups.speed.durationMs, powerups.speed.color);
+        drawEffectTimer(pos, r + 9, puck.phonkRemainingMs, powerups.phonk.durationMs, powerups.phonk.color);
         if (puck.powershot) {
             ctx.beginPath();
             ctx.arc(pos.x, pos.y, r + 6, 0, Math.PI * 2);
@@ -1068,25 +1168,124 @@
         }
     }
 
+    function drawEffectTimer(pos, radius, remainingMs, durationMs, color) {
+        if (!Number.isFinite(remainingMs) || remainingMs <= 0 || durationMs <= 0) return;
+        const progress = Math.min(remainingMs / durationMs, 1);
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+    }
+
     function drawTokens() {
         if (!state.tokens) return;
         for (const token of state.tokens) {
             const meta = constants.POWERUPS[token.type];
+            const pulse = reduceMotion ? 0 : Math.sin(Date.now() / 240 + token.id) * 1.2;
+            const radius = constants.TOKEN_RADIUS + pulse;
+            ctx.save();
+            ctx.shadowColor = meta ? meta.color : "#fff";
+            ctx.shadowBlur = reduceMotion ? 0 : 10;
             ctx.beginPath();
-            ctx.arc(token.x, token.y, constants.TOKEN_RADIUS, 0, Math.PI * 2);
+            ctx.arc(token.x, token.y, radius, 0, Math.PI * 2);
             ctx.fillStyle = meta ? meta.color : "#fff";
             ctx.fill();
             ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
             ctx.lineWidth = 2;
             ctx.stroke();
+            ctx.restore();
+            drawPowerupIcon(token);
         }
+    }
+
+    function drawPowerupIcon(token) {
+        ctx.save();
+        ctx.translate(token.x, token.y);
+        ctx.strokeStyle = "rgba(12, 24, 28, 0.92)";
+        ctx.fillStyle = "rgba(12, 24, 28, 0.92)";
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        if (token.type === "powershot") {
+            ctx.beginPath();
+            ctx.moveTo(1, -8);
+            ctx.lineTo(-5, 1);
+            ctx.lineTo(-1, 1);
+            ctx.lineTo(-3, 8);
+            ctx.lineTo(5, -2);
+            ctx.lineTo(1, -2);
+            ctx.closePath();
+            ctx.fill();
+        } else if (token.type === "speed") {
+            for (const y of [-5, 0, 5]) {
+                ctx.beginPath();
+                ctx.moveTo(-7, y);
+                ctx.lineTo(2, y);
+                ctx.lineTo(-1, y - 3);
+                ctx.moveTo(2, y);
+                ctx.lineTo(-1, y + 3);
+                ctx.stroke();
+            }
+        } else if (token.type === "getball") {
+            ctx.beginPath();
+            ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, -0.8, 0.8);
+            ctx.stroke();
+        } else if (token.type === "phonk") {
+            ctx.beginPath();
+            ctx.moveTo(2, -7);
+            ctx.lineTo(2, 3);
+            ctx.lineTo(7, 1);
+            ctx.lineTo(7, -6);
+            ctx.lineTo(2, -7);
+            ctx.moveTo(2, 3);
+            ctx.ellipse(-1, 5, 3, 2, -0.3, 0, Math.PI * 2);
+            ctx.stroke();
+        } else if (token.type === "biggoal") {
+            ctx.strokeRect(-7, -7, 14, 14);
+            ctx.beginPath();
+            ctx.moveTo(-2, -7);
+            ctx.lineTo(-2, 7);
+            ctx.moveTo(3, -7);
+            ctx.lineTo(3, 7);
+            ctx.moveTo(-7, -2);
+            ctx.lineTo(7, -2);
+            ctx.moveTo(-7, 3);
+            ctx.lineTo(7, 3);
+            ctx.stroke();
+        }
+        ctx.restore();
     }
 
     function drawPucks() {
         for (const puck of state.pucks) {
-            const pos = displayPos(puck);
+            const sourcePos = displayPos(puck);
+            const moving = puck.moving || (puck.id === selectedId && Math.hypot(inputDir.x, inputDir.y) > 0);
+            const bounce = moving && !reduceMotion ? Math.abs(Math.sin(Date.now() / 70 + puck.id)) * 1.4 : 0;
+            const pos = { x: sourcePos.x, y: sourcePos.y - bounce };
 
             drawEffects(puck, pos);
+
+            const reactionRemaining = (puckReactionUntil.get(puck.id) ?? 0) - Date.now();
+            if (reactionRemaining > 0) {
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, constants.PUCK_RADIUS + 10 * (1 - reactionRemaining / 260), 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(reactionRemaining / 120, 0.8)})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
 
             // Whoever traps the ball gets a thin white marker.
             if (state.controllingPuckId === puck.id) {
@@ -1114,6 +1313,7 @@
                 ctx.fillStyle = FALLBACK_COLORS[puck.team];
                 ctx.fill();
             }
+            drawPlayerFigure(puck, pos, constants.PUCK_RADIUS);
         }
     }
 
@@ -1133,6 +1333,15 @@
 
     function drawBall() {
         const pos = ballPos();
+        const now = Date.now();
+        while (ballTrail.length && now - ballTrail[0].at > 260) ballTrail.shift();
+        for (const point of ballTrail) {
+            const alpha = 1 - (now - point.at) / 260;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, constants.BALL_RADIUS * (0.45 + alpha * 0.45), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 238, 172, ${alpha * 0.42})`;
+            ctx.fill();
+        }
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, constants.BALL_RADIUS, 0, Math.PI * 2);
         ctx.fillStyle = "#fff";
@@ -1146,12 +1355,27 @@
         const puck = state.pucks.find((p) => p.id === kickPuckId);
         if (!puck) return;
         const pos = displayPos(puck);
+        const previewLength = 170;
+        const tipX = pos.x + Math.cos(aimAngle) * previewLength;
+        const tipY = pos.y + Math.sin(aimAngle) * previewLength;
+
         ctx.beginPath();
         ctx.moveTo(pos.x, pos.y);
-        ctx.lineTo(pos.x + Math.cos(aimAngle) * 80, pos.y + Math.sin(aimAngle) * 80);
-        ctx.strokeStyle = "#ff0";
-        ctx.lineWidth = 3;
+        ctx.lineTo(tipX, tipY);
+        ctx.setLineDash([5, 7]);
+        ctx.strokeStyle = "rgba(255, 246, 170, 0.88)";
+        ctx.lineWidth = 2.5;
         ctx.stroke();
+        ctx.setLineDash([]);
+
+        const headLength = 13;
+        ctx.beginPath();
+        ctx.moveTo(tipX, tipY);
+        ctx.lineTo(tipX - Math.cos(aimAngle - 0.48) * headLength, tipY - Math.sin(aimAngle - 0.48) * headLength);
+        ctx.lineTo(tipX - Math.cos(aimAngle + 0.48) * headLength, tipY - Math.sin(aimAngle + 0.48) * headLength);
+        ctx.closePath();
+        ctx.fillStyle = "#fff2a6";
+        ctx.fill();
     }
 
     // Text overlays (usernames, kit numbers, token letters); drawn without the
@@ -1181,20 +1405,18 @@
             ctx.fillText(puck.username, v.x, v.y - constants.PUCK_RADIUS - 10);
         }
 
-        // Powerup token labels (first letter).
-        if (state.tokens) {
-            ctx.font = "bold 12px sans-serif";
-            for (const token of state.tokens) {
-                const meta = constants.POWERUPS[token.type];
-                const letter = (meta ? meta.label : token.type).charAt(0).toUpperCase();
-                const v = toCanvas(token.x, token.y);
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
-                ctx.strokeText(letter, v.x, v.y + 4);
-                ctx.fillStyle = "#fff";
-                ctx.fillText(letter, v.x, v.y + 4);
-            }
+        if (state.goalBoost) {
+            const team = state.goalBoost.team;
+            const worldX = team === "home" ? 48 : constants.FIELD.width - 48;
+            const point = toCanvas(worldX, constants.FIELD.height / 2 + 96);
+            ctx.font = "bold 10px sans-serif";
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+            ctx.strokeText(`BIG GOAL ${Math.ceil(state.goalBoost.remainingMs / 1000)}s`, point.x, point.y);
+            ctx.fillStyle = constants.POWERUPS.biggoal.color;
+            ctx.fillText(`BIG GOAL ${Math.ceil(state.goalBoost.remainingMs / 1000)}s`, point.x, point.y);
         }
+
     }
 
     // ---- Input (movement) ------------------------------------------------
@@ -1221,7 +1443,108 @@
             }
             return { x, y };
         }
+        if (!mobileControls?.hidden && controlMode === "joystick") return joystickInput;
+        if (!mobileControls?.hidden && controlMode === "buttons") {
+            let x = Number(pressedDirections.has("right")) - Number(pressedDirections.has("left"));
+            let y = Number(pressedDirections.has("down")) - Number(pressedDirections.has("up"));
+            const length = Math.hypot(x, y);
+            if (length > 1) {
+                x /= length;
+                y /= length;
+            }
+            return { x, y };
+        }
         return { x: tiltToInput(tiltX), y: tiltToInput(tiltY) };
+    }
+
+    function setControlMode(mode) {
+        if (!["tilt", "joystick", "buttons"].includes(mode)) return;
+        controlMode = mode;
+        try {
+            localStorage.setItem("foosmania-control-mode", mode);
+        } catch {
+            // The mode remains usable for this page even if storage is unavailable.
+        }
+        joystickInput = { x: 0, y: 0 };
+        pressedDirections.clear();
+        joystickKnob.style.transform = "translate(-50%, -50%)";
+        for (const button of directionButtons) button.classList.remove("is-pressed");
+        for (const button of controlModeButtons) {
+            button.setAttribute("aria-pressed", String(button.dataset.controlMode === mode));
+        }
+        joystickBase.hidden = mode !== "joystick";
+        buttonPad.hidden = mode !== "buttons";
+
+        if (mode === "tilt" && motionEnabled) {
+            window.addEventListener(orientationEvent, onOrientation);
+            window.addEventListener("devicemotion", onMotion);
+        } else {
+            window.removeEventListener(orientationEvent, onOrientation);
+            window.removeEventListener("devicemotion", onMotion);
+        }
+        maybeShowMotionButton();
+    }
+
+    function updateMobileControls() {
+        const visible = touchDevice && !spectator && (state?.phase ?? "regular") === "regular";
+        mobileControls.hidden = !visible;
+        document.querySelector(".pitch-shell")?.classList.toggle("mobile-controls-active", visible);
+        if (!visible) {
+            enableBtn.hidden = true;
+            return;
+        }
+        for (const button of controlModeButtons) {
+            button.setAttribute("aria-pressed", String(button.dataset.controlMode === controlMode));
+        }
+        joystickBase.hidden = controlMode !== "joystick";
+        buttonPad.hidden = controlMode !== "buttons";
+        maybeShowMotionButton();
+    }
+
+    function updateJoystick(e) {
+        const rect = joystickBase.getBoundingClientRect();
+        const radius = Math.min(rect.width, rect.height) / 2 - 17;
+        let x = (e.clientX - (rect.left + rect.width / 2)) / radius;
+        let y = (e.clientY - (rect.top + rect.height / 2)) / radius;
+        const length = Math.hypot(x, y);
+        if (length > 1) {
+            x /= length;
+            y /= length;
+        }
+        joystickInput = { x, y };
+        joystickKnob.style.transform = `translate(calc(-50% + ${x * radius}px), calc(-50% + ${y * radius}px))`;
+    }
+
+    function onJoystickDown(e) {
+        e.preventDefault();
+        joystickPointerId = e.pointerId;
+        joystickBase.setPointerCapture(e.pointerId);
+        updateJoystick(e);
+    }
+
+    function onJoystickMove(e) {
+        if (e.pointerId === joystickPointerId) updateJoystick(e);
+    }
+
+    function resetJoystick(e) {
+        if (e.pointerId !== joystickPointerId) return;
+        joystickPointerId = null;
+        joystickInput = { x: 0, y: 0 };
+        joystickKnob.style.transform = "translate(-50%, -50%)";
+    }
+
+    function onDirectionDown(e) {
+        e.preventDefault();
+        const direction = e.currentTarget.dataset.moveDirection;
+        pressedDirections.add(direction);
+        e.currentTarget.classList.add("is-pressed");
+        e.currentTarget.setPointerCapture(e.pointerId);
+    }
+
+    function onDirectionUp(e) {
+        const direction = e.currentTarget.dataset.moveDirection;
+        pressedDirections.delete(direction);
+        e.currentTarget.classList.remove("is-pressed");
     }
 
     // Advance the local prediction of the selected puck by the current input.
@@ -1352,11 +1675,14 @@
 
             // Kick charge / power gauge.
             flickLabel.hidden = !aiming;
+            let charge = 0;
             if (aiming) {
-                gaugeFill.style.width = `${currentAimPower() * 100}%`;
+                charge = currentAimPower();
             } else if (spaceCharging) {
-                gaugeFill.style.width = `${Math.min((Date.now() - spaceChargeStart) / CHARGE_MS, 1) * 100}%`;
+                charge = Math.min((Date.now() - spaceChargeStart) / CHARGE_MS, 1);
             }
+            gaugeFill.style.width = `${charge * 100}%`;
+            chargeReadout.textContent = `POWER ${Math.round(charge * 100)}%`;
         }
         rafId = requestAnimationFrame(render);
     }
@@ -1552,11 +1878,14 @@
     const orientationEvent =
         "ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation";
 
+    function onControlModeClick(e) {
+        setControlMode(e.currentTarget.dataset.controlMode);
+    }
+
     // Only touch devices get the "Enable motion controls" button; desktop
     // uses WASD and never needs it.
     function maybeShowMotionButton() {
-        const touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-        enableBtn.hidden = !(touch && typeof DeviceOrientationEvent !== "undefined");
+        enableBtn.hidden = !(touchDevice && !spectator && controlMode === "tilt" && !motionEnabled && typeof DeviceOrientationEvent !== "undefined");
     }
 
     // iOS only delivers sensor events after requestPermission() from a tap;
@@ -1572,15 +1901,33 @@
         } catch (err) {
             // Permission denied or unsupported: listeners just never fire.
         }
-        window.addEventListener(orientationEvent, onOrientation);
-        window.addEventListener("devicemotion", onMotion);
+        motionEnabled = true;
+        if (controlMode === "tilt") {
+            window.addEventListener(orientationEvent, onOrientation);
+            window.addEventListener("devicemotion", onMotion);
+        }
         enableBtn.hidden = true;
     });
+
+    for (const button of controlModeButtons) {
+        button.addEventListener("click", onControlModeClick);
+    }
+    joystickBase.addEventListener("pointerdown", onJoystickDown);
+    joystickBase.addEventListener("pointermove", onJoystickMove);
+    joystickBase.addEventListener("pointerup", resetJoystick);
+    joystickBase.addEventListener("pointercancel", resetJoystick);
+    joystickBase.addEventListener("lostpointercapture", resetJoystick);
+    for (const button of directionButtons) {
+        button.addEventListener("pointerdown", onDirectionDown);
+        button.addEventListener("pointerup", onDirectionUp);
+        button.addEventListener("pointercancel", onDirectionUp);
+        button.addEventListener("lostpointercapture", onDirectionUp);
+    }
 
     // ---- Cosmetics ------------------------------------------------------
 
     function confettiBurst() {
-        if (!confettiHolder) return;
+        if (!confettiHolder || reduceMotion) return;
         const colors = kits
             ? [...kits.home.colors, ...kits.away.colors]
             : ["#e74c3c", "#3498db", "#ffffff", "#ffe14d"];
@@ -1602,6 +1949,7 @@
         clearInterval(moveTimer);
         clearInterval(movementTick);
         clearTimeout(goalOverlayTimer);
+        clearTimeout(goalFlashTimer);
         clearTimeout(powerupToastTimer);
         clearInterval(shootoutClockTimer);
         socket.off("connect", join);
@@ -1623,6 +1971,18 @@
         predictionSubmit.removeEventListener("click", submitPrediction);
         shootoutGoalkeeperSubmit.removeEventListener("click", chooseShootoutGoalkeeper);
         for (const button of shootoutDirectionButtons) button.removeEventListener("click", submitShootoutDirection);
+        for (const button of controlModeButtons) button.removeEventListener("click", onControlModeClick);
+        joystickBase.removeEventListener("pointerdown", onJoystickDown);
+        joystickBase.removeEventListener("pointermove", onJoystickMove);
+        joystickBase.removeEventListener("pointerup", resetJoystick);
+        joystickBase.removeEventListener("pointercancel", resetJoystick);
+        joystickBase.removeEventListener("lostpointercapture", resetJoystick);
+        for (const button of directionButtons) {
+            button.removeEventListener("pointerdown", onDirectionDown);
+            button.removeEventListener("pointerup", onDirectionUp);
+            button.removeEventListener("pointercancel", onDirectionUp);
+            button.removeEventListener("lostpointercapture", onDirectionUp);
+        }
         unbindInput();
         window.removeEventListener("resize", fitOrientation);
         window.removeEventListener(orientationEvent, onOrientation);
