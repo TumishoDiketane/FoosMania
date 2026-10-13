@@ -325,25 +325,28 @@
             : displayAttempt == null
                 ? "SHOOTOUT IN PROGRESS"
                 : data.suddenDeath
-                    ? `SUDDEN DEATH · ROUND ${Math.ceil((displayAttempt.number - 10) / 2)}`
+                    ? `SUDDEN DEATH — ROUND ${Math.max(1, Math.ceil((displayAttempt.number - 10) / 2))}`
                     : `ATTEMPT ${displayAttempt.number} · ROUND ${Math.ceil(displayAttempt.number / 2)} OF 5`;
         shootoutMatchupLabel.textContent = attackingTeam == null
             ? `${teamNames.home} vs ${teamNames.away}`
             : `${teamNames[attackingTeam]} attacking · ${teamNames[defendingTeam]} defending`;
+
         if (!(cinematicRunning && data.phase === "penalty_result")) {
-            shootoutStatus.textContent = data.phase === "penalty_setup"
-                ? `Penalty shootout starting · choose a goalkeeper within ${secondsLeft}s.`
-                : data.phase === "penalty_attempt"
-                    ? roleLocked
-                        ? `Hidden choices · waiting for both players (${attemptSecondsLeft}s).`
-                        : role === "kicker"
-                            ? `Hidden choices · your shot is due in ${attemptSecondsLeft}s.`
-                            : role === "goalkeeper"
-                                ? `Hidden choices · lock your save before ${attemptSecondsLeft}s.`
-                                : `Hidden choices · reveal in ${attemptSecondsLeft}s.`
-                    : data.phase === "penalty_result"
-                        ? "The duel is resolving. Next penalty up shortly."
-                        : "Shootout starting.";
+            if (data.phase === "penalty_setup") {
+                shootoutStatus.textContent = `AURORA SETUP · ${secondsLeft}s remaining`;
+            } else if (data.phase === "penalty_attempt") {
+                if (role === "kicker") {
+                    shootoutStatus.textContent = roleLocked ? `SHOT LOCKED · ${attemptSecondsLeft}s to reveal` : `CHOOSE YOUR SHOT · ${attemptSecondsLeft}s remaining`;
+                } else if (role === "goalkeeper") {
+                    shootoutStatus.textContent = roleLocked ? `GUESS LOCKED · waiting on the kicker` : `GUESS THE SHOT · ${attemptSecondsLeft}s remaining`;
+                } else {
+                    shootoutStatus.textContent = `DUEL LIVE · ${attemptSecondsLeft}s remaining`;
+                }
+            } else if (data.phase === "penalty_result") {
+                shootoutStatus.textContent = "REVEALING · RESULT IN FLIGHT";
+            } else {
+                shootoutStatus.textContent = "AURORA CIRCUIT · SHOOTOUT LIVE";
+            }
         }
 
         duelStage.classList.toggle("is-away", attackingTeam === "away");
@@ -353,6 +356,16 @@
         duelKeeperTeam.textContent = defendingTeam == null ? "Defending team" : `${teamNames[defendingTeam]} · DEFEND`;
         setDuelAvatar(duelKickerAvatar, attempt?.kicker, attackingTeam);
         setDuelAvatar(duelKeeperAvatar, attempt?.goalkeeper ?? data.goalkeepers[defendingTeam], defendingTeam);
+
+        for (const button of shootoutDirectionButtons) {
+            const isLocked = data.phase === "penalty_attempt" && role !== null && roleLocked && button.dataset.direction === (role === "kicker" ? (attempt?.kickerLocked ? "left" : null) : null);
+            const isAvailable = data.phase === "penalty_attempt" && role !== null && !roleLocked;
+            const laneName = button.dataset.direction === "middle" ? "Center" : button.dataset.direction === "left" ? "Left" : "Right";
+            button.disabled = data.phase !== "penalty_attempt" || role === null || roleLocked;
+            button.setAttribute("aria-label", `${role === "goalkeeper" ? "Defend" : "Shoot"} ${laneName}`);
+            button.classList.toggle("locked", Boolean(isLocked));
+            button.classList.toggle("active", Boolean(isAvailable));
+        }
 
         const teamPlayers = myTeam == null ? [] : (data.players[myTeam] ?? []);
         const signature = JSON.stringify([myTeam, teamPlayers, data.goalkeepers]);
@@ -376,9 +389,9 @@
             : data.phase !== "penalty_attempt"
                 ? "Watch the duel. Player choices stay hidden until reveal."
                 : role === "kicker"
-                    ? roleLocked ? "Your shot is locked. Watch the lanes." : "Take the shot · choose a target lane."
+                    ? roleLocked ? "SHOT LOCKED · waiting for the keeper." : "CHOOSE YOUR SHOT · select one lane."
                     : role === "goalkeeper"
-                        ? roleLocked ? "Your save is locked. Watch the lanes." : "Defend the gate · choose a lane to cover."
+                        ? roleLocked ? "GUESS LOCKED · waiting for the strike." : "GUESS THE SHOT · choose the lane to cover."
                         : "Spectators and teammates see the reveal with everyone else.";
         for (const button of shootoutDirectionButtons) {
             button.disabled = data.phase !== "penalty_attempt" || role === null || roleLocked;
@@ -422,6 +435,9 @@
             action: "goalkeeper",
             username: shootoutGoalkeeper.value,
         });
+        if (response.success) {
+            navigator.vibrate?.([30, 40, 60]);
+        }
         shootoutMessage.textContent = response.success
             ? `${shootoutGoalkeeper.value} set as goalkeeper.`
             : response.reason === "setup_closed"
@@ -439,6 +455,7 @@
                 ? "Your direction is already locked."
                 : "You are not assigned to this attempt.";
         } else {
+            navigator.vibrate?.([30, 40, 60]);
             shootoutMessage.textContent = "Direction locked. Waiting for the other player.";
         }
     }
