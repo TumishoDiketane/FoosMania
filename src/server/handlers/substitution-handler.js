@@ -53,7 +53,7 @@ function clearRequest(room, requestId) {
 }
 
 function validLiveMatch(room) {
-	return room.state === 'game' && room.game != null && Date.now() >= room.game.freezeUntil;
+	return room.state === 'game' && room.game != null && room.game.phase === 'regular' && Date.now() >= room.game.freezeUntil;
 }
 
 function fail(callback, reason) {
