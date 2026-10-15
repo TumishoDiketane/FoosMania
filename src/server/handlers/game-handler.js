@@ -12,6 +12,7 @@
 import { createPuckModel } from '../models/puck.js';
 import { POWERUPS } from '../utils/constants.js';
 import { expirePredictions, getMatchPredictionStats, initializePredictionMatch, resolvePredictions } from './prediction-handler.js';
+import { cancelShootout, startShootout } from './shootout-handler.js';
 
 // Shared with clients via the game:join ack; the movement constants are
 // included so a client can predict its own puck with the exact same math.
@@ -148,6 +149,7 @@ export function startGame(io, room) {
 	room.state = 'game';
 	room.lastMatch = null;
 	room.game = {
+		phase: 'regular',
 		ball: { x: CONSTANTS.FIELD.width / 2, y: CONSTANTS.FIELD.height / 2, vx: 3, vy: 2 },
 		score: { home: 0, away: 0 },
 		goalsToWin: settings.goalsToWin ?? CONSTANTS.GOALS_TO_WIN,
@@ -187,6 +189,7 @@ export function stopGame(room) {
 		clearInterval(timer);
 		tickTimers.delete(room.id);
 	}
+	cancelShootout(room);
 	expirePredictions(null, room);
 	room.game = null;
 	room.state = 'lobby';
@@ -214,6 +217,7 @@ export function serializeState(room) {
 		ball: { x: game.ball.x, y: game.ball.y, vx: game.ball.vx, vy: game.ball.vy },
 		score: { home: game.score.home, away: game.score.away },
 		controllingPuckId: game.controllingPuckId,
+		phase: game.phase ?? 'regular',
 		// remaining kickoff/goal countdown; 0 = play is live
 		freezeMs: Math.max(0, game.freezeUntil - now),
 		tokens: game.tokens.map((token) => ({ id: token.id, type: token.type, x: token.x, y: token.y })),
@@ -244,6 +248,7 @@ export function serializeJoinInfo(room, username) {
 }
 
 export function handleMove(room, username, data) {
+	if (room.game?.phase !== 'regular') return;
 	const puck = ownPuck(room, username, data.puckId);
 	if (!puck) {
 		return;
@@ -276,6 +281,7 @@ export function handleMove(room, username, data) {
 
 export function handleKick(io, room, username, data) {
 	const game = room.game;
+	if (game?.phase !== 'regular') return;
 	const puck = ownPuck(room, username, data.puckId);
 	if (!puck || Math.hypot(puck.x - game.ball.x, puck.y - game.ball.y) > CONSTANTS.CONTROL_RADIUS) {
 		return;
@@ -431,25 +437,27 @@ function scoreGoal(io, room, scorer) {
 
 // The match is over: freeze the summary on room.lastMatch, stop the sim and
 // send everyone to the stats screen.
-function endGame(io, room) {
+function endGame(io, room, shootout = null) {
 	const game = room.game;
 	expirePredictions(io, room);
 	const summary = {
 		score: { ...game.score },
 		teamNames: { home: room.homeTeamName, away: room.awayTeamName },
 		// a time-capped match can end level: that's a draw
-		winner:
+		winner: shootout?.winner ?? (
 			game.score.home === game.score.away
 				? 'draw'
 				: game.score.home > game.score.away
 					? 'home'
-					: 'away',
+					: 'away'
+		),
 		stats: Object.values(room.users).map((user) => ({
 			username: user.username,
 			team: user.team,
 			...(game.stats[user.username] ?? { touches: 0, passes: 0, shots: 0, goals: 0 }),
 		})),
 		predictions: getMatchPredictionStats(game),
+		...(shootout == null ? {} : { shootout }),
 	};
 
 	room.lastMatch = summary;
@@ -470,9 +478,20 @@ function tick(io, room) {
 	// Time-capped match: the clock running out ends it with the current
 	// score (a level score is a draw).
 	if (game.endsAt !== null && now >= game.endsAt) {
+		if (game.score.home === game.score.away) {
+			const timer = tickTimers.get(room.id);
+			if (timer) clearInterval(timer);
+			tickTimers.delete(room.id);
+			expirePredictions(io, room);
+			if (startShootout(io, room, (shootout) => endGame(io, room, shootout))) {
+				io.to(room.id).emit('game:state', serializeState(room));
+				return;
+			}
+		}
 		endGame(io, room);
 		return;
 	}
+	if (game.phase !== 'regular') return;
 
 	// Stop simulating once nobody has been listening for a while.
 	const listenerCount = io.sockets.adapter.rooms.get(room.id)?.size || 0;

@@ -153,6 +153,21 @@
         border-radius: 6px;
     }
 
+    .stats-shell #shootout-attempt-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        text-align: left;
+    }
+
+    .stats-shell .shootout-attempt-row {
+        padding: 8px 10px;
+        background: rgba(23, 32, 68, 0.06);
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        overflow-wrap: anywhere;
+    }
+
     .stats-shell .boot-row {
         display: grid;
         grid-template-columns: 28px 1fr 32px;
@@ -282,6 +297,13 @@
         <section class="panel">
             <h2>Golden boot race</h2>
             <div id="boot-list"></div>
+        </section>
+
+        <section id="shootout-stats-section" class="panel" hidden>
+            <h2>Penalty shootout</h2>
+            <p id="shootout-final-score"></p>
+            <p id="shootout-goalkeepers"></p>
+            <div id="shootout-attempt-list"></div>
         </section>
 
         <section id="prediction-stats-section" class="panel" hidden>
