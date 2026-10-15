@@ -1,4 +1,6 @@
 # FoosMania
+## University of the Free state - Computer Science and Informatics Department
+### Work Intergated Learning- Csis 3784
 
 [![Node.js](https://img.shields.io/badge/Node.js-ESM-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
@@ -90,8 +92,6 @@ src/
     public/audio/       Sound effects
     public/images/      Backgrounds
 ```
-
-Stadium side panels use each planet team's kit colors.
 
 ## Documentation
 
