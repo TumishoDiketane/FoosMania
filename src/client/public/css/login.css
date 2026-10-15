@@ -18,10 +18,10 @@
     --accent-hi: #57b2ff;    /* highlight on the blue   */
     --accent-lo: #1a7bd2;    /* shaded blue             */
 
-    --button-primary: #ff8066;
-    --button-primary-hover: #ff9b5e;
-    --button-primary-pressed: #d95755;
-    --button-secondary: #172044;
+    --button-primary: #2BC016;
+    --button-primary-hover: #25a813;
+    --button-primary-pressed: #218f14;
+    --button-secondary: #048BA8;
     --button-selected: #65e6e2;
     --button-disabled: #59627d;
 
@@ -210,11 +210,11 @@ body {
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--button-secondary, #172044);
+    color: #ffffff;
     border-radius: 8px;
-    background: var(--button-primary);
+    background: #048BA8;
     box-shadow:
-        0 12px 24px -11px rgba(255, 128, 102, 0.6),
+        0 12px 24px -11px rgba(4, 139, 168, 0.6),
         inset 0 1px 0 rgba(255, 255, 255, 0.45),
         inset 0 -2px 0 rgba(0, 0, 0, 0.22);
     transition: transform 90ms ease, box-shadow 130ms ease, filter 130ms ease;
@@ -237,20 +237,20 @@ body {
 .enter-btn::after  { right: 13px; }
 
 .enter-btn:hover {
-    background: var(--button-primary-hover);
+    background: #037994;
     box-shadow:
-        0 0 0 3px rgba(255, 128, 102, 0.18),
-        0 18px 36px rgba(255, 128, 102, 0.34),
+        0 0 0 3px rgba(4, 139, 168, 0.18),
+        0 18px 36px rgba(4, 139, 168, 0.34),
         inset 0 1px 0 rgba(255, 255, 255, 0.45),
         inset 0 -2px 0 rgba(0, 0, 0, 0.22);
 }
 
 .enter-btn:active {
     color: #fff;
-    background: var(--button-primary-pressed);
+    background: #026780;
     transform: translateY(1px);
     box-shadow:
-        0 6px 14px -11px rgba(217, 87, 85, 0.8),
+        0 6px 14px -11px rgba(4, 139, 168, 0.8),
         inset 0 2px 5px rgba(0, 0, 0, 0.35);
 }
  

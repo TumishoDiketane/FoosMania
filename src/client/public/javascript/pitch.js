@@ -25,6 +25,12 @@
     const ctx = canvas.getContext("2d");
     const scoreA = document.getElementById("score-a");
     const scoreB = document.getElementById("score-b");
+    const teamNameA = document.getElementById("team-name-a");
+    const teamNameB = document.getElementById("team-name-b");
+    const teamScoreA = document.getElementById("team-score-a");
+    const teamScoreB = document.getElementById("team-score-b");
+    const flagA = document.getElementById("flag-a");
+    const flagB = document.getElementById("flag-b");
     const clockEl = document.getElementById("match-clock");
     const gaugeFill = document.getElementById("gauge-fill");
     const gauge = document.getElementById("gauge");
@@ -400,6 +406,12 @@
         kits = resolveKits(teamNames.home, teamNames.away);
         scoreA.style.color = readableKitColor(kits.home);
         scoreB.style.color = readableKitColor(kits.away);
+        teamNameA.textContent = teamNames.home;
+        teamNameB.textContent = teamNames.away;
+        teamScoreA.textContent = state?.score.home ?? 0;
+        teamScoreB.textContent = state?.score.away ?? 0;
+        setTeamFlag(flagA, kits.home);
+        setTeamFlag(flagB, kits.away);
 
         setupStadium();
         fitOrientation();
@@ -424,27 +436,14 @@
         updateFlip();
     }
 
-    // Landscape (desktop / spectators) gets the stadium chrome; each side panel
-    // is filled with the team's alternating kit colours.
-    // Portrait mobile players see the bare pitch (CSS hides the chrome below the media query).
+    // Landscape uses the CSS stadium surround; portrait keeps the bare pitch.
     function setupStadium() {
-        if (!kits) return;
         container.classList.add("in-stadium");
+    }
 
-        function fillKitPanel(el, kit) {
-            el.innerHTML = "";
-            for (let i = 0; i < 4; i++) {
-                const tile = document.createElement("span");
-                tile.className = "team-kit-tile";
-                tile.style.background = kit.colors[i % kit.colors.length];
-                el.append(tile);
-            }
-        }
-
-        const homeKitPanel = document.getElementById("home-kit-panel");
-        const awayKitPanel = document.getElementById("away-kit-panel");
-        if (homeKitPanel) fillKitPanel(homeKitPanel, kits.home);
-        if (awayKitPanel) fillKitPanel(awayKitPanel, kits.away);
+    function setTeamFlag(flag, kit) {
+        const [primary, secondary] = kit.colors;
+        flag.style.background = `linear-gradient(180deg, ${primary} 0 33%, ${secondary} 33% 66%, ${primary} 66% 100%)`;
     }
 
     function updateClock(s) {
@@ -477,8 +476,8 @@
     function onState(s) {
         state = s;
         resolveMyTeam();
-        scoreA.textContent = `${teamNames.home} ${s.score.home}`;
-        scoreB.textContent = `${s.score.away} ${teamNames.away}`;
+        teamScoreA.textContent = s.score.home;
+        teamScoreB.textContent = s.score.away;
         updateClock(s);
         updateCountdown(s.freezeMs ?? 0);
 

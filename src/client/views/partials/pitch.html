@@ -1,5 +1,4 @@
 <!-- the match itself: pitch canvas, gyro/tap/flick + WASD/Space controls -->
-<link rel="preload" href="/images/Designer.png" as="image" type="image/png">
 <style>
     /* SPA partial: styles scoped under .pitch-shell so nothing leaks into
        other views. */
@@ -31,9 +30,26 @@
         padding: 10px;
         display: flex;
         justify-content: center;
-        align-items: baseline;
-        gap: 12px;
+        align-items: center;
+        gap: 10px;
         flex-wrap: wrap;
+    }
+
+    .pitch-shell .team-score {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        white-space: nowrap;
+    }
+
+    .pitch-shell .team-flag {
+        display: inline-block;
+        width: 24px;
+        height: 16px;
+        flex: 0 0 24px;
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        border-radius: 2px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
     }
 
     .pitch-shell #match-clock {
@@ -44,9 +60,9 @@
 
     .pitch-shell #enable-motion {
         font-size: 1.1rem;
-        background: #172044;
+        background: #048BA8;
         color: #fff;
-        border: 1px solid #29346d;
+        border: 1px solid #048BA8;
         border-radius: 6px;
         padding: 10px 20px;
         margin-bottom: 10px;
@@ -54,7 +70,7 @@
     }
 
     .pitch-shell #enable-motion:hover {
-        background: #29346d;
+        background: #037994;
     }
 
     .pitch-shell #enable-motion:focus-visible {
@@ -113,42 +129,38 @@
         color: #aaa;
     }
 
-    /* ---- Stadium chrome: landscape (desktop + spectators) only ---------- */
-    /* Mobile portrait players get the bare pitch, nothing else.            */
-
-    .pitch-shell .stadium {
-        display: none;
-    }
+    /* ---- CSS stadium surround: landscape (desktop + spectators) ---------- */
 
     @media (orientation: landscape) {
         .pitch-shell #pitch-container.in-stadium {
-            width: min(92vw, calc(80vh * 1.55));
-            height: min(80vh, calc(92vw / 1.55));
-            aspect-ratio: 1598 / 1013;
+            width: min(98vw, calc((100dvh - 150px) * 1.6));
+            height: min(calc(98vw / 1.6), calc(100dvh - 150px));
             margin: 0 auto;
-            padding: 0;
-            border-radius: 0;
-            background-color: #1a2e2a;
-            background-image: url("/images/Designer.png");
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-size: contain;
-            box-shadow: none;
+            overflow: hidden;
+            border: clamp(8px, 1.5vw, 20px) solid #43545a;
+            border-radius: clamp(18px, 3vw, 38px);
+            background:
+                radial-gradient(ellipse at 50% 50%, rgba(73, 132, 99, 0.4), transparent 62%),
+                repeating-radial-gradient(circle at 5px 5px, #e7aa4a 0 1px, transparent 1.7px 8px),
+                repeating-radial-gradient(circle at 3px 4px, #43a6ba 0 1px, transparent 1.6px 9px),
+                linear-gradient(145deg, #263b48, #14252d 55%, #32434a);
+            background-size: auto, 10px 10px, 12px 12px, auto;
+            box-shadow:
+                inset 0 0 0 4px rgba(224, 235, 228, 0.34),
+                inset 0 0 28px rgba(0, 0, 0, 0.72),
+                0 18px 44px rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .pitch-shell #pitch {
-            width: 66%;
+            width: 92%;
             max-width: none;
-            max-height: 70%;
+            max-height: 94%;
             height: auto;
-            transform: translateY(1%);
-        }
-
-        .pitch-shell .stadium {
-            display: none;
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.42);
         }
     }
 
@@ -286,8 +298,8 @@
     .pitch-shell .substitution-button {
         padding: 7px 10px;
         color: #fff;
-        background: #315f50;
-        border: 1px solid #719b86;
+        background: #048BA8;
+        border: 1px solid #048BA8;
         border-radius: 4px;
         cursor: pointer;
     }
@@ -357,8 +369,8 @@
     .pitch-shell .prediction-button {
         padding: 7px 10px;
         color: #fff;
-        background: #315f50;
-        border: 1px solid #719b86;
+        background: #048BA8;
+        border: 1px solid #048BA8;
         border-radius: 4px;
         cursor: pointer;
     }
@@ -409,9 +421,17 @@
 
 <div class="pitch-shell">
     <div id="scoreline">
-        <span id="score-a" class="team-a">Team 1 0</span>
+        <span id="score-a" class="team-a team-score">
+            <span id="flag-a" class="team-flag" aria-hidden="true"></span>
+            <span id="team-name-a">Team 1</span>
+            <span id="team-score-a">0</span>
+        </span>
         <span>-</span>
-        <span id="score-b" class="team-b">0 Team 2</span>
+        <span id="score-b" class="team-b team-score">
+            <span id="team-score-b">0</span>
+            <span id="flag-b" class="team-flag" aria-hidden="true"></span>
+            <span id="team-name-b">Team 2</span>
+        </span>
         <span id="match-clock" hidden>0:00</span>
     </div>
     <section id="substitution-panel" hidden aria-label="Substitution controls">
@@ -425,9 +445,6 @@
     </section>
     <button id="enable-motion" hidden>Enable motion controls</button>
     <div id="pitch-container">
-        <div class="stadium crowd"></div>
-        <div class="stadium kit-panel left" id="home-kit-panel"></div>
-        <div class="stadium kit-panel right" id="away-kit-panel"></div>
         <canvas id="pitch" width="800" height="500"></canvas>
         <div id="flick" hidden>FLICK!</div>
         <div id="goal-overlay"><span class="goal-text">GOAL!!!</span></div>
