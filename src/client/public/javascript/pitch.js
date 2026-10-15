@@ -103,6 +103,10 @@
     let portrait = false;
     let flip = false; // portrait + home team: rotate 180 so our goal is up top
     let inputBound = false;
+    let motionControlsEnabled = false;
+    let motionPermissionPending = false;
+    let motionDetectionTimer = null;
+    let orientationDetected = false;
     let socketId = null;
     let substitutionData = null;
     let predictionData = null;
@@ -1515,6 +1519,16 @@
     }
 
     function onOrientation(e) {
+        if (Number.isFinite(e.beta) && Number.isFinite(e.gamma)) {
+            orientationDetected = true;
+            motionControlsEnabled = true;
+            motionPermissionPending = false;
+            enableBtn.disabled = false;
+            enableBtn.hidden = true;
+            clearTimeout(motionDetectionTimer);
+            motionDetectionTimer = null;
+        }
+
         const beta = e.beta || 0;
         const gamma = e.gamma || 0;
         switch (screenAngle()) {
@@ -1548,33 +1562,84 @@
         if (aiming && mag > peakAccel) peakAccel = mag;
     }
 
-    const orientationEvent =
-        "ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation";
+    const orientationEvent = "deviceorientation";
 
     // Only touch devices get the "Enable motion controls" button; desktop
     // uses WASD and never needs it.
     function maybeShowMotionButton() {
         const touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-        enableBtn.hidden = !(touch && typeof DeviceOrientationEvent !== "undefined");
+        const supportsOrientation = typeof DeviceOrientationEvent !== "undefined";
+        enableBtn.hidden = !(touch && supportsOrientation) || motionControlsEnabled || motionPermissionPending;
     }
 
-    // iOS only delivers sensor events after requestPermission() from a tap;
-    // hide the button once permission is resolved either way.
-    enableBtn.addEventListener("click", async () => {
-        try {
-            if (typeof DeviceOrientationEvent !== "undefined" && DeviceOrientationEvent.requestPermission) {
-                await DeviceOrientationEvent.requestPermission();
-            }
-            if (typeof DeviceMotionEvent !== "undefined" && DeviceMotionEvent.requestPermission) {
-                await DeviceMotionEvent.requestPermission();
-            }
-        } catch (err) {
-            // Permission denied or unsupported: listeners just never fire.
+    // iOS only delivers sensor events after requestPermission() from a tap.
+    // Start both permission prompts before awaiting either one to preserve
+    // the browser's transient user activation for both APIs.
+    async function enableMotionControls() {
+        if (motionPermissionPending || motionControlsEnabled) return;
+        if (window.isSecureContext === false) {
+            hint.textContent = "Motion controls require HTTPS on mobile. Open this game using a secure connection.";
+            return;
         }
-        window.addEventListener(orientationEvent, onOrientation);
-        window.addEventListener("devicemotion", onMotion);
-        enableBtn.hidden = true;
-    });
+
+        motionPermissionPending = true;
+        orientationDetected = false;
+        enableBtn.disabled = true;
+        try {
+            const requests = [];
+            if (typeof DeviceOrientationEvent !== "undefined" &&
+                typeof DeviceOrientationEvent.requestPermission === "function") {
+                requests.push({
+                    type: "orientation",
+                    promise: DeviceOrientationEvent.requestPermission(),
+                });
+            }
+            if (typeof DeviceMotionEvent !== "undefined" &&
+                typeof DeviceMotionEvent.requestPermission === "function") {
+                requests.push({
+                    type: "motion",
+                    promise: DeviceMotionEvent.requestPermission(),
+                });
+            }
+
+            const permissionResults = await Promise.allSettled(requests.map((request) => request.promise));
+            const orientationIndex = requests.findIndex((request) => request.type === "orientation");
+            if (orientationIndex !== -1) {
+                const orientationResult = permissionResults[orientationIndex];
+                if (orientationResult.status === "rejected" || orientationResult.value !== "granted") {
+                    throw orientationResult.status === "rejected"
+                        ? orientationResult.reason
+                        : new Error("Device orientation permission was denied.");
+                }
+            }
+
+            window.addEventListener(orientationEvent, onOrientation, { passive: true });
+            window.addEventListener("devicemotion", onMotion, { passive: true });
+            motionPermissionPending = true;
+            enableBtn.hidden = true;
+            const motionIndex = requests.findIndex((request) => request.type === "motion");
+            const motionDenied = motionIndex !== -1 &&
+                (permissionResults[motionIndex].status === "rejected" || permissionResults[motionIndex].value !== "granted");
+            if (motionDenied) {
+                hint.textContent = "Tilt controls are enabled. Drag to aim kicks if motion access is unavailable.";
+            }
+            motionDetectionTimer = setTimeout(() => {
+                motionDetectionTimer = null;
+                if (orientationDetected) return;
+                motionPermissionPending = false;
+                enableBtn.disabled = false;
+                maybeShowMotionButton();
+                hint.textContent = "No tilt data received. Check your browser's motion permissions and try again.";
+            }, 2500);
+        } catch (err) {
+            motionPermissionPending = false;
+            enableBtn.disabled = false;
+            maybeShowMotionButton();
+            hint.textContent = "Motion permission was not granted. Allow motion access in your browser settings, then try again.";
+            console.warn("Unable to enable motion controls:", err);
+        }
+    }
+    enableBtn.addEventListener("click", enableMotionControls);
 
     // ---- Cosmetics ------------------------------------------------------
 
@@ -1602,6 +1667,7 @@
         clearInterval(movementTick);
         clearTimeout(goalOverlayTimer);
         clearTimeout(powerupToastTimer);
+        clearTimeout(motionDetectionTimer);
         clearInterval(shootoutClockTimer);
         socket.off("connect", join);
         socket.off("game:started", onStarted);
@@ -1618,6 +1684,7 @@
         socket.off("game:substitution-role", onSubstitutionRole);
         socket.off("game:substituted", onSubstituted);
         substitutionRequestButton.removeEventListener("click", requestSubstitution);
+        enableBtn.removeEventListener("click", enableMotionControls);
         substitutionTarget.removeEventListener("change", refreshSubstitutionAvailability);
         predictionSubmit.removeEventListener("click", submitPrediction);
         shootoutGoalkeeperSubmit.removeEventListener("click", chooseShootoutGoalkeeper);
