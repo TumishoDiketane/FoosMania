@@ -1,14 +1,15 @@
-// Authoritative game simulation, one per room.
-// The game listeners in ../listeners/game are the only callers; they pass io
-// so state can be broadcast to the room's socket channel (the room id).
-//
-// Sim state lives on `room.game`, so deleting the room deletes the game with
-// it. The one exception is the tick timer: room:update broadcasts the whole
-// room and a Node timer cannot be serialized, so timers live in the
-// module-level `tickTimers` map (keyed by room id) and are cleared by
-// stopGame — which rooms-handler.removeRoom calls on room deletion.
-//
-// The home team defends the left goal (x = 0), away the right.
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Run each room's authoritative match simulation, validating player
+ * movement and kicks and deciding possession, tackles, goals, AI, timing,
+ * statistics, and power-up effects.
+ *
+ * Match state belongs to room.game. Tick timers stay in a room-keyed module
+ * map because timers cannot be serialized, and stopGame clears them when the
+ * match or room ends. The home team defends the left goal; away defends right.
+ */
 import { createPuckModel } from '../models/puck.js';
 import { POWERUPS } from '../utils/constants.js';
 import { expirePredictions, getMatchPredictionStats, initializePredictionMatch, resolvePredictions } from './prediction-handler.js';

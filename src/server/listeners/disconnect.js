@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Handle socket disconnects, retaining match membership during the
+ * reconnect grace period and otherwise updating room membership immediately.
+ */
 import {
     getSpectatorRoom,
     getUserRoom,

@@ -1,3 +1,9 @@
+# Authors:
+# Lesiba Ledwaba — Student No. 2025717063
+# Tumisho Diketane — Student No. 2024965994
+# Purpose: Install production dependencies, copy the server/client runtime, and
+# launch the Node server as the unprivileged node user.
+#
 # Runs the full game server (Express pages + socket.io realtime).
 # Built and pushed to GHCR by .github/workflows/render-deploy.yml;
 # Render pulls the image and runs it.

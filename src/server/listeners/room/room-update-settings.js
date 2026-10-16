@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Restrict lobby setting changes to the host and delegate field
+ * validation to the room handler.
+ */
 import { getUserRoom } from '../../handlers/user-handler.js';
 import { updateRoomSettings } from '../../handlers/rooms-handler.js';
 

@@ -1,11 +1,10 @@
-// Tiny sound helper shared by the pitch and stats views. Maps logical game
-// events to the audio files in /audio (see audio/naming.md) and plays them
-// with a small pool so rapid repeats (kicks) don't cut each other off.
-//
-// Loaded as a classic script; publishes playSound() (pooled one-shots) and
-// playTimedSound() (a longer clip stopped after a set duration, for the phonk
-// power-up) on globalThis. A missing file just no-ops (a browser that blocks
-// autoplay until first gesture also no-ops silently), so callers never guard.
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Map match events to audio, pool short effects, and time longer
+ * power-up music without stacking duplicate playback.
+ */
 (function () {
     // event name -> file(s) under /audio. Multiple files = pick at random.
     const SOUND_FILES = {

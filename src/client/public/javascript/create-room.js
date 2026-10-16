@@ -1,6 +1,10 @@
-// Create-room: send the form's room name to the server over the
-// shared socket (see socket.js), then follow the creator into the pregame
-// (waiting) screen.
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Validate a room name, create the room through the shared socket,
+ * and navigate its creator to the pregame lobby.
+ */
 (function () {
     const form = document.querySelector(".form-grid");
     const nameInput = document.getElementById("room-name");

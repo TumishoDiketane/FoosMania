@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Share the valid team planet names, power-up metadata, and room
+ * capacity used by the server and client.
+ */
 export const planets = [
 	'Mercury',
 	'Venus',

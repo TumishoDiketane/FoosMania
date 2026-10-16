@@ -1,7 +1,10 @@
 /*
-    Single page application handling.
-    Saving/getting current room code.
-*/
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Load SPA views, clean up the outgoing view, and handle browser
+ * navigation without replacing the shared socket.
+ */
 
 const appContent = document.getElementById('app-content');
 

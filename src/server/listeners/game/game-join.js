@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Reclaim reconnecting membership, join the match channel, and return
+ * game, substitution, prediction, or shootout state to the player or spectator.
+ */
 import { getSpectatorRoom, getUserRoom, reclaimMembership } from '../../handlers/user-handler.js';
 import { serializeJoinInfo } from '../../handlers/game-handler.js';
 import { getSubstitutionView, rebindSubstitutionTarget } from '../../handlers/substitution-handler.js';

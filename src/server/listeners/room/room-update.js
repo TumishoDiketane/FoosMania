@@ -1,3 +1,9 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Return the current room snapshot to a connected player or spectator.
+ */
 import { getSpectatorRoom, getUserRoom } from '../../handlers/user-handler.js';
 
 export const event = 'room:update';

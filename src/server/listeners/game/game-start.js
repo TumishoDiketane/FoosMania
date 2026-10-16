@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Allow only the room host to start the match, then notify room
+ * members and refresh the room listings.
+ */
 import { getUserRoom } from '../../handlers/user-handler.js';
 import { startGame } from '../../handlers/game-handler.js';
 

@@ -9,30 +9,31 @@
 [![Deploy](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render&logoColor=white)](./DEPLOYMENT.md)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](#license)
 
-Multiplayer browser Table Soccer Game. The match plays on a shared screen; every player uses their phone as a controller. Tilt to move, drag-and-flick to shoot, collect power ups to level up.
+Multiplayer browser Table Soccer Game. The match plays on a shared screen; every player can use a phone as a controller. Choose Tilt, Joystick, or Buttons to move, then aim and release to shoot.
 
 Built with Node/Express + Socket.IO and vanilla JS. No build step, no framework, no database — the entire game runs in server memory.
 
 ## Features
 
-- **Phones as controllers** — mobile tilt steering + drag-to-aim / flick-to-shoot; desktop WASD + hold-Space to charge a kick.
-- **Real-time multiplayer** — authoritative 30 Hz server simulation over Socket.IO, with client-side prediction softly reconciled every snapshot.
-- **Rooms & lobbies** — create a room, share the code, pick a team. Rooms get two random planet names and matching kits.
-- **Spectator mode** — full-match rooms and in-progress games route extra joiners to a read-only view.
-- **Reconnect grace** — a dropped connection mid-match holds your player/spectator slot for 30s instead of bouncing you home.
-- **Power-ups** — power shots, speed, phonk (tackle immunity), get-ball, and a widened goal, all tick-driven and configurable per room.
-- **Match settings** — goals-to-win, match duration, and which power-ups are enabled, all host-controlled.
-- **Stats** — end-of-match summary with score, per-player touches/passes/shots/goals, and a golden-boot race.
+- **Phones as controllers** — choose Tilt, Joystick, or Buttons for mobile movement; drag to aim and release to shoot, with a phone flick adding kick power. Desktop uses WASD/arrows and hold-Space charging.
+- **Real-time multiplayer** — the server runs the authoritative 30 Hz simulation. The selected puck moves from local prediction for immediate response; other pucks and the ball are smoothed toward server snapshots.
+- **Rooms & lobbies** — create a room, share its four-letter code, and pick a team. Rooms get two random planet names and contrasting kits.
+- **Spectator mode** — full rooms and in-progress games route extra joiners to a read-only view.
+- **Reconnect grace** — a dropped connection mid-match holds your player/spectator slot for 30 seconds so a reconnect can reclaim it.
+- **Power-ups** — collect Power Shot, Speed Boost, Phonk (tackle immunity), Magnet (grants instant possession), or Big Goal (temporarily widens a goal); effects and spawn rolls are handled by the server tick.
+- **Predictions** — spectators can pick the next scoring player or team during live play. Correct picks earn points, incorrect picks lose points, and void or expired picks refund the stake.
+- **Match settings** — the host controls match duration and substitution approval/limits; goals-to-win and power-up defaults are set by the server.
+- **Stats** — end-of-match summary with score, per-player touches/passes/shots/goals, prediction results, shootout results, and a golden-boot race.
 - **Sound & polish** — kick/goal/power-up audio, per-planet kit designs, stadium frame, goal confetti.
 
 ## How to Play
 
 1. Open the site on a shared screen (laptop, TV) and on each player's phone.
 2. Enter a username.
-3. One player **creates a room** and shares the 6-letter code.
-4. Everyone else **joins** with the Qr code/ six digit code and picks a team.
+3. One player **creates a room** and shares the four-letter code.
+4. Everyone else **joins** with the room code and picks a team. Players can also spectate full rooms or matches in progress.
 5. The host adjusts settings and presses **Start**.
-6. Play from your phone — tilt to move, drag and release to shoot.
+6. On a phone, select **Tilt**, **Joystick**, or **Buttons** to move. Tilt may require motion permission; drag from your puck and release to shoot, with a quick phone flick adding power. On a computer, move with WASD/arrows and hold Space to charge a kick.
 
 ## Quick Start
 
@@ -63,7 +64,7 @@ docker run --rm -p 3000:3000 table-soccer
 | `npm run dev` | Run with nodemon (auto-restart on change) |
 | `npm start` | Start the server |
 | `npm run check` | Syntax-check every tracked `.js` file (`node --check`) — the only "lint" |
-| `npm test` | Stub — no tests exist |
+| `npm test` | Run the Node.js handler tests |
 
 ## Tech Stack
 

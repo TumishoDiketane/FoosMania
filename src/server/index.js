@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Configure the Express app, static assets, HTTP server, routes, and
+ * Socket.IO listeners, then start listening on the configured port.
+ */
 import path from 'path';
 import http from 'http';
 import express from 'express';

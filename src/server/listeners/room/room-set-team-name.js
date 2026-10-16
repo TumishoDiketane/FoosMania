@@ -1,3 +1,9 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Allow the lobby host to select a validated planet name for a team.
+ */
 import { getUserRoom } from '../../handlers/user-handler.js';
 import { setTeamName } from '../../handlers/rooms-handler.js';
 

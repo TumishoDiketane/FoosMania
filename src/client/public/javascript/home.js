@@ -1,3 +1,9 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Handle lobby usernames, live room listings, joining, and spectating.
+ */
 (function () {
     const currentUser = document.getElementById('current-user');
     const usernameForm = document.getElementById('username-form');
@@ -122,6 +128,7 @@
     async function joinRoomByCode() {
         const code = roomCodeInput ? roomCodeInput.value.trim() : '';
 
+        // Do not send an empty room code; room-code characters are normalized as the user types below.
         if (!code) {
             if (joinStatus) {
                 joinStatus.textContent = 'Enter a room code first.';
@@ -156,6 +163,7 @@
         const savedUsername = sessionStorage.getItem('username');
         usernameStatus.textContent = '';
 
+        // An empty username cannot be stored or used as the socket identity.
         if (!username) {
             usernameStatus.textContent = 'Enter a username to continue.';
             usernameInput.focus();
@@ -164,6 +172,7 @@
 
         usernameSubmit.disabled = true;
         try {
+            // A saved username may be reused, but a new name must be unique on the server.
             if (username !== savedUsername) {
                 const response = await fetch(`/username-exists?username=${encodeURIComponent(username)}`);
                 const result = await response.json();

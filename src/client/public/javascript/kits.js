@@ -1,7 +1,10 @@
-// Team kits: two colours (base shirt + accent) and a shirt pattern
-// per planet, plus the pairing logic that guarantees the two teams in a
-// match never wear a similar design. Pure data + functions (no DOM, no
-// socket), published on globalThis for pitch.js.
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Define planet team colours and patterns, and resolve contrasting
+ * kits so opponents remain visually distinct.
+ */
 
 const KIT_PATTERNS = ["solid", "stripes", "hoop", "halves", "checks"];
 

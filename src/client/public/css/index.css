@@ -1,3 +1,11 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Define shared lobby and room styles with responsive layouts and
+ * reusable colors and controls; pitch views use their own scoped styles.
+ */
+
 /* Flat, mobile-first design system for the lobby/room screens (login, home,
    create-room, pregame). Gameplay screens (pitch/player) have their own CSS
    and are not affected by this file. */

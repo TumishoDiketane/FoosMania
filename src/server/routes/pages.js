@@ -1,3 +1,9 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Serve the SPA shell for page paths and HTML partials for view loads.
+ */
 import express from "express";
 
 const router = express.Router();

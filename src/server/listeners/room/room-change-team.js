@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Change a player's team or spectator role while preserving room
+ * capacity rules and handing the host role to another player when needed.
+ */
 import { getSpectatorRoom, getUserRoom, removeSpectatorFromRoom, addUserToRoom, addSpectatorToRoom } from '../../handlers/user-handler.js';
 import { removeRoom } from '../../handlers/rooms-handler.js';
 import { MAX_PLAYERS } from '../../utils/constants.js';

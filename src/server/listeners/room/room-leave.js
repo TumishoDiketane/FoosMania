@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Finalize pending reconnect membership and remove a leaving player
+ * or spectator from their room.
+ */
 import {
 	flushPendingRemoval,
 	getSpectatorRoom,

@@ -1,9 +1,10 @@
-// Pregame (waiting room): join the room's socket channel, render the live
-// roster for each team, let the host start the game, tune match settings
-// (time limit, team planets) and manage players
-// (kick / move team). Everyone else sees the settings read-only. Spectators
-// (joined a full room) watch the lobby without team controls.
-// Gameplay itself (pitch/player views) is out of scope here.
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Join and render the live lobby roster, team kits, host settings,
+ * player controls, and spectator state before a match begins.
+ */
 (async function () {
     const roomNameEl = document.getElementById("room-name");
     const roomCodeEl = document.getElementById("room-code");

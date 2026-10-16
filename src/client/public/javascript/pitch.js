@@ -1,25 +1,21 @@
-// The entire game experience: full zoomed-out pitch, always. Controlling a
-// puck never zooms in — your selected puck gets a green circle, and input
-// drives it directly from this view.
-//
-// SPA view: uses the shared `socket` / `username` globals (socket.js), the kit
-// helpers (kits.js) and playSound (sounds.js), and registers window.cleanupView
-// so navigating away stops the render loop, the move interval and all listeners.
-//
-// The server stays authoritative, but the puck YOU steer is rendered from a
-// local prediction (same math and constants as the server tick), softly
-// reconciled against every game:state snapshot — so your own input feels
-// instant while everyone else's pucks render straight from the server.
-//
-// Controls:
-//   - Tap one of your (ringed) pucks to select it.
-//   - Mobile: tilt to move; while you hold the ball, drag from the puck to aim
-//     and release to kick (flick the phone during the drag for more power).
-//   - Desktop: WASD/arrows to move; while you hold the ball, hold Space to
-//     charge a kick in your current facing (or toward goal) and release to fire.
-//
-// Spectators (joined a full / in-progress room) get the same view with no
-// controls bound.
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Render and control the match pitch, including player input, match
+ * events, mobile controls, and spectator panels.
+ *
+ * The server owns match state. The selected puck is simulated locally for
+ * immediate input and is not reconciled to snapshots; other pucks and the ball
+ * are eased toward server snapshots. Portrait mode rotates the landscape world
+ * for the screen and flips it for the home team so its goal stays at the top.
+ *
+ * Players can select Tilt, Joystick, or Buttons on touch devices; the choice
+ * is saved for later visits. Tilt/drag aiming and desktop WASD/arrows with
+ * Space charging are also supported. Spectators see the match without controls.
+ * The shared socket and kit/sound helpers are reused, and cleanupView removes
+ * this view's listeners, timers, and animation loops when navigation changes.
+ */
 (function () {
     const canvas = document.getElementById("pitch");
     const ctx = canvas.getContext("2d");
@@ -96,6 +92,7 @@
     const SMOOTH_BALL_MS = 40; // faster for the ball so hard kicks don't visibly lag
     const SMOOTH_SNAP = 80; // gap beyond this = teleport (goal reset, rejoin)
     const TACKLE_SOUND_CHANCE = 0.3;
+    // Disable decorative movement and trails when the user requests less motion.
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     const touchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0 || window.matchMedia?.("(pointer: coarse)").matches;
 
@@ -159,6 +156,7 @@
     const ballTrail = [];
     const puckReactionUntil = new Map();
 
+    // Keep the last touch-control choice when storage is available.
     function readControlPreference() {
         try {
             const saved = localStorage.getItem("foosmania-control-mode");
@@ -754,9 +752,8 @@
             ? null
             : (s.pucks.find((p) => p.id === s.controllingPuckId)?.team ?? null);
 
-        // Removed server reconciliation for the locally controlled puck.
-        // The client is the sole source of truth for its own puck's position
-        // and locally enforces the same bounds as the server.
+        // Snapshots refresh shared state, but do not overwrite the selected
+        // puck's local prediction; other pucks and the ball are smoothed below.
 
         const controlMine = s.controllingPuckId !== null && myPuckIds.includes(s.controllingPuckId);
         if (controlMine && !iControl) {
@@ -1171,6 +1168,7 @@
         }
     }
 
+    // The arc shrinks with the server-reported time left in the effect.
     function drawEffectTimer(pos, radius, remainingMs, durationMs, color) {
         if (!Number.isFinite(remainingMs) || remainingMs <= 0 || durationMs <= 0) return;
         const progress = Math.min(remainingMs / durationMs, 1);
@@ -1334,6 +1332,7 @@
         return smoothBall ?? state.ball;
     }
 
+    // Brief trail points come from fast server snapshots and are skipped for reduced motion.
     function drawBall() {
         const pos = ballPos();
         const now = Date.now();
@@ -1381,7 +1380,7 @@
         ctx.fill();
     }
 
-    // Text overlays (usernames, kit numbers, token letters); drawn without the
+    // Text overlays (usernames and kit numbers); drawn without the
     // rotation transform so text stays upright in portrait mode.
     function drawLabels() {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1429,8 +1428,8 @@
         return Math.min(Math.max(deg / TILT_FULL, -1), 1);
     }
 
-    // Current movement input in view/screen space: keyboard (desktop) wins,
-    // else the gyro tilt.
+    // Input priority is keyboard, selected visible touch control, then tilt.
+    // The result stays in view space until the movement tick rotates it to world space.
     function currentViewInput() {
         if (keys.size) {
             let x = 0;
@@ -1460,6 +1459,7 @@
         return { x: tiltToInput(tiltX), y: tiltToInput(tiltY) };
     }
 
+    // Changing modes clears stale input, updates the controls, and saves the preference.
     function setControlMode(mode) {
         if (!["tilt", "joystick", "buttons"].includes(mode)) return;
         controlMode = mode;
@@ -1504,6 +1504,7 @@
         maybeShowMotionButton();
     }
 
+    // Clamp diagonal drags to the joystick's circular travel limit.
     function updateJoystick(e) {
         const rect = joystickBase.getBoundingClientRect();
         const radius = Math.min(rect.width, rect.height) / 2 - 17;
@@ -1518,6 +1519,7 @@
         joystickKnob.style.transform = `translate(calc(-50% + ${x * radius}px), calc(-50% + ${y * radius}px))`;
     }
 
+    // Capture the pointer so drags continue even when the finger leaves the base.
     function onJoystickDown(e) {
         e.preventDefault();
         joystickPointerId = e.pointerId;
@@ -1529,6 +1531,7 @@
         if (e.pointerId === joystickPointerId) updateJoystick(e);
     }
 
+    // Release/cancel/lost capture all return movement input to neutral.
     function resetJoystick(e) {
         if (e.pointerId !== joystickPointerId) return;
         joystickPointerId = null;

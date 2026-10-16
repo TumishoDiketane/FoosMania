@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Discover listener modules, validate their event handlers, and
+ * attach shared room-update helpers to Socket.IO and connected sockets.
+ */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

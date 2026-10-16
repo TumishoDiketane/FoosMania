@@ -1,11 +1,10 @@
-// Login: capture the username, stash it for the rest of the session, and head
-// to the lobby.
-//
-// No socket is opened here on purpose. Every page in this app is a full reload,
-// so a socket created on the login page would be torn down the instant we
-// navigate away. Identity is carried across that boundary in sessionStorage;
-// later pages read the username back out and identify themselves to the server
-// on their own connection.
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Validate and store the username for the session, then route into
+ * the lobby or a room code without opening a short-lived socket.
+ */
 
 (function () {
     // Shared contract: other pages read the username from this same key.
