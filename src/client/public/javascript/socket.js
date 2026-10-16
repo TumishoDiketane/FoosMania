@@ -13,10 +13,12 @@ window.connectSocket = function (username) {
         return null;
     }
 
+    // Keep the live connection when this view uses the same username.
     if (socket && socket.auth.username === username) {
         return socket;
     }
 
+    // A changed username needs a new authenticated socket.
     if (socket) {
         socket.disconnect();
     }

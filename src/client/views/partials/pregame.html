@@ -701,6 +701,7 @@ pregame.js uses #room-code, #team1-players, #team2-players, and #settings-panel.
             <button id="leave-room-button" class="ghost-btn">Leave room</button>
         </header>
 
+        <!-- Room code and sharing controls appear above the settings. -->
         <section class="host-panel">
             <div class="host-top" id="session-code-container">
                 <div class="host-meta">
@@ -728,6 +729,7 @@ pregame.js uses #room-code, #team1-players, #team2-players, and #settings-panel.
                 when you're ready.</p>
         </section>
 
+        <!-- Only the host can edit these settings; others see read-only values. -->
         <section id="settings-panel" class="unassigned-card settings-card">
             <p class="section-copy">Match settings <span id="settings-lock" class="small-note"></span></p>
             <div class="settings-grid">
@@ -771,6 +773,7 @@ pregame.js uses #room-code, #team1-players, #team2-players, and #settings-panel.
             </div>
         </section>
 
+        <!-- Team and spectator rosters are refreshed from room:update events. -->
         <div class="teams-head">
             <h2 class="teams-title">Teams</h2>
             <button id="start-game-button" class="start-btn" type="button" hidden>Start game</button>
@@ -807,6 +810,7 @@ pregame.js uses #room-code, #team1-players, #team2-players, and #settings-panel.
             </article>
         </div>
 
+        <!-- Players who have not chosen a team are listed separately. -->
         <section id="unassigned-section" class="unassigned-card" hidden>
             <p class="section-copy">Not on a team yet</p>
             <div id="unassigned-players" class="player-list"></div>

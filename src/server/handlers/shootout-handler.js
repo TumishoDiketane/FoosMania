@@ -16,6 +16,7 @@ const STANDARD_ATTEMPTS_PER_TEAM = 2;
 
 const shootouts = new WeakMap();
 
+// Use only players who currently own pucks for shootout roles.
 function activeRoster(room, team) {
 	const usernames = new Set(Object.values(room.pucks ?? {})
 		.filter((puck) => puck.team === team && puck.username != null)
@@ -38,6 +39,7 @@ function clearTimer(state) {
 }
 
 function schedule(state, callback, delay) {
+	// Clear the previous phase timer before scheduling the next one.
 	clearTimer(state);
 	state.timer = setTimeout(() => {
 		state.timer = null;
@@ -46,6 +48,7 @@ function schedule(state, callback, delay) {
 }
 
 function publicState(state) {
+	// Do not send either direction choice until the attempt result is announced.
 	return {
 		phase: state.phase,
 		notice: state.phase === 'penalty_setup'
@@ -77,6 +80,7 @@ function broadcast(io, state) {
 }
 
 function selectGoalkeeper(state, team) {
+	// Reuse the last active keeper, or fall back to the first player on the team.
 	const roster = state.rosters[team];
 	const previous = state.room.shootoutGoalkeepers?.[team];
 	if (roster.some((player) => player.username === previous)) return previous;

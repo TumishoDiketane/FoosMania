@@ -15,6 +15,7 @@ import { addUsername } from './handlers/user-handler.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Find and import every event module under listeners/.
 function loadListeners(listenersPath) {
 	return fs
 		.readdirSync(listenersPath, { recursive: true })
@@ -27,6 +28,7 @@ function loadListeners(listenersPath) {
 		});
 }
 
+// These helpers broadcast updates to all clients or to a room.
 function attachHelperFunctionsIo(io) {
 	io.fireRoomsUpdate = () => {
 		io.emit('rooms:update', { rooms: getRoomsList() });
@@ -38,6 +40,7 @@ function attachHelperFunctionsIo(io) {
 	}
 }
 
+// These helpers send the same updates only to one client.
 function attachHelperFunctionsSocket(socket) {
 	socket.fireRoomsUpdate = () => {
 		socket.emit('rooms:update', { rooms: getRoomsList() });
@@ -50,6 +53,7 @@ function attachHelperFunctionsSocket(socket) {
 }
 
 export function registerSocketListeners(io) {
+	// Attach each validated event handler when a socket connects.
 	const listenersPath = path.join(__dirname, 'listeners');
 	const listeners = loadListeners(listenersPath);
 

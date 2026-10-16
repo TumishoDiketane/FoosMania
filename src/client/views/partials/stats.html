@@ -272,12 +272,14 @@ stats.js fills #final-score, #boot-list, and the conditional stats sections.
 
 <div class="stats-shell">
     <div class="stats-inner">
+        <!-- Final score and winner come from the saved match summary. -->
         <header>
             <p class="full-time">Full time</p>
             <div id="final-score">Loading...</div>
             <p id="winner-line"></p>
         </header>
 
+        <!-- Personal stats are hidden for spectators; standings remain public. -->
         <section id="my-stats-section" class="panel">
             <h2>Your match stats</h2>
             <div class="stat-grid">
@@ -305,6 +307,7 @@ stats.js fills #final-score, #boot-list, and the conditional stats sections.
             <div id="boot-list"></div>
         </section>
 
+        <!-- Extra result panels appear only when that match feature was used. -->
         <section id="shootout-stats-section" class="panel" hidden>
             <h2>Penalty shootout</h2>
             <p id="shootout-final-score"></p>

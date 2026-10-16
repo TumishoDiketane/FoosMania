@@ -14,6 +14,7 @@ import { getSpectatorRoom, getUserRoom } from './user-handler.js';
 // Requests stay open for 15 seconds; an expired request gets a short host override window.
 const REQUEST_TTL_MS = 15000;
 const HOST_OVERRIDE_TTL_MS = 15000;
+// Timers live outside room data so they are not included in room broadcasts.
 const expiryTimers = new Map();
 const processingRooms = new Set();
 
@@ -21,6 +22,7 @@ function requestList(room) {
 	return Object.values(room.substitutions ?? {});
 }
 
+// Send the latest roster, requests, approval mode, and limits to room members.
 function emitUpdate(io, room) {
 	const players = Object.entries(room.users).map(([id, user]) => ({ id, username: user.username, team: user.team }));
 	const requests = requestList(room).map((request) => ({ ...request }));
@@ -166,6 +168,7 @@ function approveSubstitution(io, room, request, socket) {
 	const limit = room.settings.substitutionsPerTeam ?? 3;
 	if ((room.game.substitutionsByTeam?.[request.targetTeam] ?? 0) >= limit) return { success: false, reason: 'substitution_limit' };
 
+	// Update membership and puck ownership together so both roles stay in sync.
 	processingRooms.add(room.id);
 	try {
 		const outgoing = room.users[request.targetPlayerId];
