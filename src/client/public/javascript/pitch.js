@@ -25,6 +25,12 @@
     const ctx = canvas.getContext("2d");
     const scoreA = document.getElementById("score-a");
     const scoreB = document.getElementById("score-b");
+    const teamNameA = document.getElementById("team-name-a");
+    const teamNameB = document.getElementById("team-name-b");
+    const teamScoreA = document.getElementById("team-score-a");
+    const teamScoreB = document.getElementById("team-score-b");
+    const flagA = document.getElementById("flag-a");
+    const flagB = document.getElementById("flag-b");
     const clockEl = document.getElementById("match-clock");
     const gaugeFill = document.getElementById("gauge-fill");
     const gauge = document.getElementById("gauge");
@@ -106,6 +112,10 @@
     let portrait = false;
     let flip = false; // portrait + home team: rotate 180 so our goal is up top
     let inputBound = false;
+    let motionControlsEnabled = false;
+    let motionPermissionPending = false;
+    let motionDetectionTimer = null;
+    let orientationDetected = false;
     let socketId = null;
     let substitutionData = null;
     let predictionData = null;
@@ -630,6 +640,12 @@
         kits = resolveKits(teamNames.home, teamNames.away);
         scoreA.style.color = readableKitColor(kits.home);
         scoreB.style.color = readableKitColor(kits.away);
+        teamNameA.textContent = teamNames.home;
+        teamNameB.textContent = teamNames.away;
+        teamScoreA.textContent = state?.score.home ?? 0;
+        teamScoreB.textContent = state?.score.away ?? 0;
+        setTeamFlag(flagA, kits.home);
+        setTeamFlag(flagB, kits.away);
 
         setupStadium();
         fitOrientation();
@@ -655,27 +671,14 @@
         updateFlip();
     }
 
-    // Landscape (desktop / spectators) gets the stadium chrome; each side panel
-    // is filled with the team's alternating kit colours.
-    // Portrait mobile players see the bare pitch (CSS hides the chrome below the media query).
+    // Landscape uses the CSS stadium surround; portrait keeps the bare pitch.
     function setupStadium() {
-        if (!kits) return;
         container.classList.add("in-stadium");
+    }
 
-        function fillKitPanel(el, kit) {
-            el.innerHTML = "";
-            for (let i = 0; i < 4; i++) {
-                const tile = document.createElement("span");
-                tile.className = "team-kit-tile";
-                tile.style.background = kit.colors[i % kit.colors.length];
-                el.append(tile);
-            }
-        }
-
-        const homeKitPanel = document.getElementById("home-kit-panel");
-        const awayKitPanel = document.getElementById("away-kit-panel");
-        if (homeKitPanel) fillKitPanel(homeKitPanel, kits.home);
-        if (awayKitPanel) fillKitPanel(awayKitPanel, kits.away);
+    function setTeamFlag(flag, kit) {
+        const [primary, secondary] = kit.colors;
+        flag.style.background = `linear-gradient(180deg, ${primary} 0 33%, ${secondary} 33% 66%, ${primary} 66% 100%)`;
     }
 
     function updateClock(s) {
@@ -729,8 +732,8 @@
         }
         updateMobileControls();
         resolveMyTeam();
-        scoreA.textContent = `${teamNames.home} ${s.score.home}`;
-        scoreB.textContent = `${s.score.away} ${teamNames.away}`;
+        teamScoreA.textContent = s.score.home;
+        teamScoreB.textContent = s.score.away;
         updateClock(s);
         updateCountdown(s.freezeMs ?? 0);
 
@@ -1842,6 +1845,16 @@
     }
 
     function onOrientation(e) {
+        if (Number.isFinite(e.beta) && Number.isFinite(e.gamma)) {
+            orientationDetected = true;
+            motionControlsEnabled = true;
+            motionPermissionPending = false;
+            enableBtn.disabled = false;
+            enableBtn.hidden = true;
+            clearTimeout(motionDetectionTimer);
+            motionDetectionTimer = null;
+        }
+
         const beta = e.beta || 0;
         const gamma = e.gamma || 0;
         switch (screenAngle()) {
@@ -1875,8 +1888,7 @@
         if (aiming && mag > peakAccel) peakAccel = mag;
     }
 
-    const orientationEvent =
-        "ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation";
+    const orientationEvent = "deviceorientation";
 
     function onControlModeClick(e) {
         setControlMode(e.currentTarget.dataset.controlMode);
@@ -1885,29 +1897,79 @@
     // Only touch devices get the "Enable motion controls" button; desktop
     // uses WASD and never needs it.
     function maybeShowMotionButton() {
-        enableBtn.hidden = !(touchDevice && !spectator && controlMode === "tilt" && !motionEnabled && typeof DeviceOrientationEvent !== "undefined");
+        const touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+        const supportsOrientation = typeof DeviceOrientationEvent !== "undefined";
+        enableBtn.hidden = !(touch && supportsOrientation) || motionControlsEnabled || motionPermissionPending;
     }
 
-    // iOS only delivers sensor events after requestPermission() from a tap;
-    // hide the button once permission is resolved either way.
-    enableBtn.addEventListener("click", async () => {
+    // iOS only delivers sensor events after requestPermission() from a tap.
+    // Start both permission prompts before awaiting either one to preserve
+    // the browser's transient user activation for both APIs.
+    async function enableMotionControls() {
+        if (motionPermissionPending || motionControlsEnabled) return;
+        if (window.isSecureContext === false) {
+            hint.textContent = "Motion controls require HTTPS on mobile. Open this game using a secure connection.";
+            return;
+        }
+
+        motionPermissionPending = true;
+        orientationDetected = false;
+        enableBtn.disabled = true;
         try {
-            if (typeof DeviceOrientationEvent !== "undefined" && DeviceOrientationEvent.requestPermission) {
-                await DeviceOrientationEvent.requestPermission();
+            const requests = [];
+            if (typeof DeviceOrientationEvent !== "undefined" &&
+                typeof DeviceOrientationEvent.requestPermission === "function") {
+                requests.push({
+                    type: "orientation",
+                    promise: DeviceOrientationEvent.requestPermission(),
+                });
             }
-            if (typeof DeviceMotionEvent !== "undefined" && DeviceMotionEvent.requestPermission) {
-                await DeviceMotionEvent.requestPermission();
+            if (typeof DeviceMotionEvent !== "undefined" &&
+                typeof DeviceMotionEvent.requestPermission === "function") {
+                requests.push({
+                    type: "motion",
+                    promise: DeviceMotionEvent.requestPermission(),
+                });
             }
+
+            const permissionResults = await Promise.allSettled(requests.map((request) => request.promise));
+            const orientationIndex = requests.findIndex((request) => request.type === "orientation");
+            if (orientationIndex !== -1) {
+                const orientationResult = permissionResults[orientationIndex];
+                if (orientationResult.status === "rejected" || orientationResult.value !== "granted") {
+                    throw orientationResult.status === "rejected"
+                        ? orientationResult.reason
+                        : new Error("Device orientation permission was denied.");
+                }
+            }
+
+            window.addEventListener(orientationEvent, onOrientation, { passive: true });
+            window.addEventListener("devicemotion", onMotion, { passive: true });
+            motionPermissionPending = true;
+            enableBtn.hidden = true;
+            const motionIndex = requests.findIndex((request) => request.type === "motion");
+            const motionDenied = motionIndex !== -1 &&
+                (permissionResults[motionIndex].status === "rejected" || permissionResults[motionIndex].value !== "granted");
+            if (motionDenied) {
+                hint.textContent = "Tilt controls are enabled. Drag to aim kicks if motion access is unavailable.";
+            }
+            motionDetectionTimer = setTimeout(() => {
+                motionDetectionTimer = null;
+                if (orientationDetected) return;
+                motionPermissionPending = false;
+                enableBtn.disabled = false;
+                maybeShowMotionButton();
+                hint.textContent = "No tilt data received. Check your browser's motion permissions and try again.";
+            }, 2500);
         } catch (err) {
-            // Permission denied or unsupported: listeners just never fire.
+            motionPermissionPending = false;
+            enableBtn.disabled = false;
+            maybeShowMotionButton();
+            hint.textContent = "Motion permission was not granted. Allow motion access in your browser settings, then try again.";
+            console.warn("Unable to enable motion controls:", err);
         }
-        motionEnabled = true;
-        if (controlMode === "tilt") {
-            window.addEventListener(orientationEvent, onOrientation);
-            window.addEventListener("devicemotion", onMotion);
-        }
-        enableBtn.hidden = true;
-    });
+    }
+    enableBtn.addEventListener("click", enableMotionControls);
 
     for (const button of controlModeButtons) {
         button.addEventListener("click", onControlModeClick);
@@ -1951,6 +2013,7 @@
         clearTimeout(goalOverlayTimer);
         clearTimeout(goalFlashTimer);
         clearTimeout(powerupToastTimer);
+        clearTimeout(motionDetectionTimer);
         clearInterval(shootoutClockTimer);
         socket.off("connect", join);
         socket.off("game:started", onStarted);
@@ -1967,6 +2030,7 @@
         socket.off("game:substitution-role", onSubstitutionRole);
         socket.off("game:substituted", onSubstituted);
         substitutionRequestButton.removeEventListener("click", requestSubstitution);
+        enableBtn.removeEventListener("click", enableMotionControls);
         substitutionTarget.removeEventListener("change", refreshSubstitutionAvailability);
         predictionSubmit.removeEventListener("click", submitPrediction);
         shootoutGoalkeeperSubmit.removeEventListener("click", chooseShootoutGoalkeeper);

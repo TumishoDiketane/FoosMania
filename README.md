@@ -1,4 +1,6 @@
 # FoosMania
+## University of the Free State - Computer Science and Informatics Department
+### Work Intergated Learning- CSIS 3784
 
 [![Node.js](https://img.shields.io/badge/Node.js-ESM-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
@@ -15,7 +17,7 @@ Built with Node/Express + Socket.IO and vanilla JS. No build step, no framework,
 
 - **Phones as controllers** — mobile tilt steering + drag-to-aim / flick-to-shoot; desktop WASD + hold-Space to charge a kick.
 - **Real-time multiplayer** — authoritative 30 Hz server simulation over Socket.IO, with client-side prediction softly reconciled every snapshot.
-- **Rooms & lobbies** — create a room, share the 6-letter code, pick a team. Rooms get two random planet names and matching kits.
+- **Rooms & lobbies** — create a room, share the code, pick a team. Rooms get two random planet names and matching kits.
 - **Spectator mode** — full-match rooms and in-progress games route extra joiners to a read-only view.
 - **Reconnect grace** — a dropped connection mid-match holds your player/spectator slot for 30s instead of bouncing you home.
 - **Power-ups** — power shots, speed, phonk (tackle immunity), get-ball, and a widened goal, all tick-driven and configurable per room.
@@ -90,8 +92,6 @@ src/
     public/audio/       Sound effects
     public/images/      Backgrounds
 ```
-
-Stadium side panels use each planet team's kit colors.
 
 ## Documentation
 

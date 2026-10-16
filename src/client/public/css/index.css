@@ -12,15 +12,15 @@
     --primary-text: #ffffff;
     --primary-dark: #2559c2;
     --danger: #d64545;
-    --button-primary: #ff8066;
-    --button-primary-hover: #ff9b5e;
-    --button-primary-pressed: #d95755;
-    --button-secondary: #172044;
-    --button-secondary-hover: #29346d;
+    --button-primary: #2BC016;
+    --button-primary-hover: #25a813;
+    --button-primary-pressed: #218f14;
+    --button-secondary: #048BA8;
+    --button-secondary-hover: #037994;
     --button-selected: #65e6e2;
     --button-highlight: #ffd166;
     --button-disabled: #59627d;
-    --button-danger: #c95762;
+    --button-danger: #048BA8;
     --public: #1f9d55;
     --public-bg: #e7f7ee;
     --private: #b5720a;
@@ -288,9 +288,9 @@ select {
 }
 
 .btn-primary {
-    color: var(--button-secondary);
+    color: #ffffff;
     background: var(--button-primary);
-    box-shadow: 0 8px 22px rgba(255, 128, 102, 0.24);
+    box-shadow: 0 8px 22px rgba(43, 192, 22, 0.24);
 }
 
 .btn-primary:hover {
@@ -304,7 +304,7 @@ select {
 
 .btn-secondary:hover {
     background: var(--button-secondary-hover);
-    box-shadow: 0 0 0 3px rgba(101, 230, 226, 0.16);
+    box-shadow: 0 0 0 3px rgba(4, 139, 168, 0.16);
 }
 
 .btn-secondary:active {
@@ -468,15 +468,15 @@ select {
 }
 
 .btn-primary {
-    color: var(--button-secondary);
+    color: #ffffff;
     background: var(--button-primary);
-    box-shadow: 0 8px 22px rgba(255, 128, 102, 0.24);
+    box-shadow: 0 8px 22px rgba(43, 192, 22, 0.24);
 }
 
 .btn-primary:hover {
     transform: translateY(-1px);
     background: var(--button-primary-hover);
-    box-shadow: 0 0 0 3px rgba(255, 128, 102, 0.18), 0 14px 32px rgba(255, 128, 102, 0.32);
+    box-shadow: 0 0 0 3px rgba(43, 192, 22, 0.18), 0 14px 32px rgba(43, 192, 22, 0.32);
 }
 
 .btn:focus-visible {
