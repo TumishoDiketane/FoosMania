@@ -109,18 +109,33 @@
     }
 
     .pitch-shell #gauge {
+        position: relative;
         width: 60%;
         max-width: 400px;
         height: 20px;
         margin: 12px auto;
         background: #444;
         border: 1px solid #fff;
+        overflow: hidden;
     }
 
     .pitch-shell #gauge-fill {
         width: 0%;
         height: 100%;
         background: #ff0;
+        transition: width 50ms linear;
+    }
+
+    .pitch-shell #gauge-value {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font: 700 11px/1 sans-serif;
+        text-shadow: 0 1px 3px #000;
+        pointer-events: none;
     }
 
     .pitch-shell #hint {
@@ -1076,6 +1091,19 @@
         .pitch-shell .duel-lanes {
             animation: none;
         }
+
+        .pitch-shell #pitch,
+        .pitch-shell #gauge-fill {
+            transition: none;
+        }
+
+        .pitch-shell #goal-overlay .goal-text {
+            animation: none;
+        }
+
+        .pitch-shell #pitch-container.goal-flash #pitch {
+            filter: none;
+        }
     }
 
     .pitch-shell #shootout-panel .shootout-row,
@@ -1156,6 +1184,22 @@
         <div id="countdown" hidden></div>
         <div id="powerup-toast"></div>
     </div>
+    <section id="mobile-controls" hidden aria-label="Mobile movement controls">
+        <div class="control-mode-group" role="group" aria-label="Movement mode">
+            <button class="control-mode-button" type="button" data-control-mode="tilt" aria-pressed="true">Tilt</button>
+            <button class="control-mode-button" type="button" data-control-mode="joystick" aria-pressed="false">Joystick</button>
+            <button class="control-mode-button" type="button" data-control-mode="buttons" aria-pressed="false">Buttons</button>
+        </div>
+        <div id="joystick-base" hidden aria-label="Movement joystick">
+            <span id="joystick-knob"></span>
+        </div>
+        <div id="button-pad" hidden aria-label="Directional movement buttons">
+            <button class="move-button" type="button" data-move-direction="up" style="grid-area:up" aria-label="Move up">&#9650;</button>
+            <button class="move-button" type="button" data-move-direction="left" style="grid-area:left" aria-label="Move left">&#9664;</button>
+            <button class="move-button" type="button" data-move-direction="right" style="grid-area:right" aria-label="Move right">&#9654;</button>
+            <button class="move-button" type="button" data-move-direction="down" style="grid-area:down" aria-label="Move down">&#9660;</button>
+        </div>
+    </section>
     <section id="prediction-panel" hidden aria-label="Next goal prediction">
         <h2>PREDICT THE NEXT GOAL</h2>
         <p>Who scores next?</p>
@@ -1250,6 +1294,7 @@
     </section>
     <div id="gauge">
         <div id="gauge-fill"></div>
+        <span id="gauge-value">0%</span>
     </div>
     <div id="hint">Connecting...</div>
     <div id="confetti"></div>
