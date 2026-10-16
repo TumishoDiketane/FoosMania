@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Track player and spectator membership, allow match reconnects for
+ * 30 seconds, and remove departing hosts or assign a replacement host.
+ */
 import { getRoomById, getRooms, removeRoom } from './rooms-handler.js';
 import { createUserModel } from '../models/user.js';
 

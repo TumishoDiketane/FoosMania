@@ -1,9 +1,17 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Validate substitution requests, approvals, and expiry, then replace
+ * a player with a spectator while updating match ownership and statistics.
+ */
 import crypto from 'crypto';
 
 import { serializeJoinInfo, serializeState } from './game-handler.js';
 import { getPredictionSnapshot } from './prediction-handler.js';
 import { getSpectatorRoom, getUserRoom } from './user-handler.js';
 
+// Requests stay open for 15 seconds; an expired request gets a short host override window.
 const REQUEST_TTL_MS = 15000;
 const HOST_OVERRIDE_TTL_MS = 15000;
 const expiryTimers = new Map();
@@ -61,6 +69,7 @@ function fail(callback, reason) {
 }
 
 function startExpiry(io, room, request) {
+	// Notify the room when approval expires, then remove the request after the host's override window.
 	const timer = setTimeout(() => {
 		if (findRequest(room, request.id) !== request) return;
 		if (room.state !== 'game' || room.game == null) {
@@ -85,6 +94,7 @@ function startExpiry(io, room, request) {
 }
 
 function requestSubstitution(io, socket, data, callback) {
+	// Only a spectator can request an available active player's slot within the team's match limit.
 	const room = getSpectatorRoom(socket.id);
 	if (room == null || room.spectators[socket.id] == null) return fail(callback, 'not_spectator');
 	if (!validLiveMatch(room)) return fail(callback, 'match_not_playing');
@@ -128,6 +138,7 @@ function requestSubstitution(io, socket, data, callback) {
 }
 
 function approveSubstitution(io, room, request, socket) {
+	// The target approves by default; host approval or the expired-request window can authorize an override.
 	if (!validLiveMatch(room)) return { success: false, reason: 'match_not_playing' };
 	if (processingRooms.has(room.id)) return { success: false, reason: 'substitution_in_progress' };
 	if (request.roomId !== room.id || room.users[request.targetPlayerId] == null || room.spectators[request.spectatorId] == null) {
@@ -204,6 +215,7 @@ function approveSubstitution(io, room, request, socket) {
 }
 
 function respondToSubstitution(io, socket, data, callback) {
+	// Targets or hosts may reject; requesters or hosts may cancel before replacement.
 	const room = getUserRoom(socket.id) ?? getSpectatorRoom(socket.id);
 	const request = room == null ? null : findRequest(room, data?.requestId);
 	if (room == null || request == null) return fail(callback, 'request_not_found');

@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Resolve room-code joins and explicit spectator joins, then update
+ * room membership and broadcast the new counts.
+ */
 import { getRoomByCode, getRoomById } from '../../handlers/rooms-handler.js';
 import {
 	addSpectatorToRoom,

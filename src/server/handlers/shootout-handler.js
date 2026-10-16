@@ -1,9 +1,17 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Coordinate penalty setup, timed kicker and goalkeeper choices,
+ * attempt results, and sudden-death rounds after a tied match.
+ */
 const DIRECTIONS = new Set(['left', 'middle', 'right']);
 const TEAMS = ['home', 'away'];
 const SETUP_DURATION_MS = 10000;
 const CHOICE_DURATION_MS = 15000;
 const RESULT_PAUSE_MS = 3200;
 const FINAL_RESULT_PAUSE_MS = 3200;
+// Setup, choice, and result pauses are timed phases; ties after two attempts each enter sudden death.
 const STANDARD_ATTEMPTS_PER_TEAM = 2;
 
 const shootouts = new WeakMap();
@@ -101,6 +109,7 @@ function determineWinner(state) {
 }
 
 function startAttempt(state) {
+	// Alternate teams and rotate through eligible kickers while assigning the opposite team's keeper.
 	if (state.phase === 'complete') return;
 	const team = state.attemptIndex % 2 === 0 ? 'home' : 'away';
 	const teamAttempt = Math.floor(state.attemptIndex / 2);
@@ -127,6 +136,7 @@ function startAttempt(state) {
 }
 
 function resolveAttempt(state) {
+	// A kicker timeout is a miss; a keeper timeout defaults to the kicker's lane (or middle if both time out).
 	if (state.phase !== 'penalty_attempt' || state.currentAttempt == null) return;
 	const attempt = state.currentAttempt;
 	const kickerTimedOut = attempt.choices.kicker === null;
@@ -158,6 +168,7 @@ function resolveAttempt(state) {
 	broadcast(state.io, state);
 
 	const completedPair = attempt.team === 'away';
+	// Compare scores after each pair; if still tied after regulation attempts, require a decisive sudden-death pair.
 	if (completedPair && state.attemptIndex >= STANDARD_ATTEMPTS_PER_TEAM * 2) {
 		if (determineWinner(state)) return;
 		state.suddenDeath = true;
@@ -170,6 +181,7 @@ function resolveAttempt(state) {
 }
 
 export function startShootout(io, room, onComplete, options = {}) {
+	// Begin setup for a regular-phase match when both teams have active players.
 	if (room.game == null || room.game.phase !== 'regular') return false;
 	const rosters = { home: activeRoster(room, 'home'), away: activeRoster(room, 'away') };
 	if (rosters.home.length === 0 || rosters.away.length === 0) return false;

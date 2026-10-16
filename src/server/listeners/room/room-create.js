@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Validate a requested room id, create the lobby, and add its creator
+ * as the first player and host.
+ */
 import { createRoom, getRoomById } from '../../handlers/rooms-handler.js';
 import { addUserToRoom } from '../../handlers/user-handler.js';
 

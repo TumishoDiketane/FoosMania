@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Route player goalkeeper selections and penalty directions to the
+ * shootout handler and return its validation result.
+ */
 import { getUserRoom } from '../../handlers/user-handler.js';
 import { chooseGoalkeeper, submitShootoutChoice } from '../../handlers/shootout-handler.js';
 

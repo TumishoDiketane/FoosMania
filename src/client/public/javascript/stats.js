@@ -1,9 +1,10 @@
-// Full-time stats view. The match summary arrives via the game:ended event
-// on the pitch, which stashes it in sessionStorage before navigating here —
-// so a refresh (or arriving with no match played) falls back to home.
-//
-// Uses the shared `socket` and `username` globals from socket.js and the kit
-// helpers from kits.js.
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Load the saved match summary and render the result, player stats,
+ * prediction record, and any penalty shootout details.
+ */
 (function () {
     const raw = sessionStorage.getItem("matchStats");
     if (raw == null) {

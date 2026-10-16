@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Check shootout setup, role validation, choice privacy, timeouts,
+ * and sudden-death match outcomes.
+ */
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 import { randomUUID } from 'node:crypto';
@@ -68,6 +75,7 @@ function makeIo() {
 	};
 }
 
+// A tied clock expiry keeps the regular score and transitions into penalty setup.
 test('a tied regular-time timeout pauses the match and starts penalties without changing score', async () => {
 	const room = makeRoom();
 	room.game = null;
@@ -96,6 +104,7 @@ async function waitForAttempt(io, number) {
 	return io.waitFor('game:penalty-update', (data) => data.phase === 'penalty_attempt' && data.attempt?.number === number);
 }
 
+// Only active players are assigned as goalkeepers, and setup choices close when attempts start.
 test('goalkeepers are selected from active players and locked after setup', async () => {
 	const room = makeRoom();
 	const io = makeIo();
@@ -117,6 +126,7 @@ test('goalkeepers are selected from active players and locked after setup', asyn
 	assert.equal(room.game.score.away, 2);
 });
 
+// A still-active goalkeeper carries over; a player cannot pick someone from the other team.
 test('automatic setup reuses the previous active goalkeeper and rejects other teams', async () => {
 	const room = makeRoom();
 	room.shootoutGoalkeepers = { home: 'Z-home', away: 'Z-away' };
@@ -129,6 +139,7 @@ test('automatic setup reuses the previous active goalkeeper and rejects other te
 	assert.deepEqual(attempt.goalkeepers, { home: 'Z-home', away: 'Z-away' });
 });
 
+// No direction leaks to the room until both the assigned kicker and keeper submit.
 test('goalkeeper choices are hidden until both roles lock their direction', async () => {
 	const room = makeRoom();
 	const io = makeIo();
@@ -151,6 +162,7 @@ test('goalkeeper choices are hidden until both roles lock their direction', asyn
 	assert.equal(result.goalkeeperChoice, 'left');
 });
 
+// A kicker timeout is a miss, including when the goalkeeper also does not choose.
 test('attempt timeout treats an unsubmitted kick as a miss', async () => {
 	const room = makeRoom();
 	const io = makeIo();
@@ -165,6 +177,7 @@ test('attempt timeout treats an unsubmitted kick as a miss', async () => {
 	assert.deepEqual(result.penaltyScore, { home: 0, away: 0 });
 });
 
+// Two standard attempts each can tie; sudden death then ends when one team wins its paired round.
 test('two tied rounds proceed to sudden death and finish on a split round', async () => {
 	const room = makeRoom();
 	const io = makeIo();

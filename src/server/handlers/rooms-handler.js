@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Create and look up rooms, validate lobby settings and team names,
+ * and publish the public room list.
+ */
 import crypto from 'crypto';
 
 import { createRoomModel } from '../models/room.js';

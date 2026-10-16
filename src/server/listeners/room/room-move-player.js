@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Verify the requesting host and target, then assign that player to
+ * the requested team.
+ */
 import { getUserRoom, setUserTeam } from '../../handlers/user-handler.js';
 
 export const event = 'room:move-player';

@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Create a puck's default ownership, position, movement, and
+ * power-up state for the server simulation.
+ */
 export function createPuckModel(changes = {}) {
     const puck = {
         id: undefined,

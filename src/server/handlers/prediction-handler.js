@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Validate spectator goal predictions, resolve their scores, and
+ * refund stakes when predictions are void or expire.
+ */
 import { getSpectatorRoom } from './user-handler.js';
 
 export const PREDICTION_RULES = Object.freeze({
@@ -58,6 +65,7 @@ function emitPublicUpdate(io, room) {
 }
 
 export function submitPrediction(io, socket, data, callback) {
+	// Only spectators may predict during live play, and each may have one pending pick per goal round.
 	const room = getSpectatorRoom(socket.id);
 	const spectator = room?.spectators[socket.id];
 	if (room == null || spectator == null) return fail(callback, 'not_spectator');
@@ -110,6 +118,7 @@ function updateMatchStats(game, username, outcome, pointsChange) {
 }
 
 function resolvePrediction(io, room, game, prediction, scorer, scorerUsername) {
+	// A correct pick earns the reward; a miss loses both the stake and penalty. Uncredited player goals void and refund the pick.
 	const profile = getProfile(prediction.username);
 	const teamOnly = scorerUsername == null;
 	let outcome;
@@ -169,6 +178,7 @@ export function resolvePredictions(io, room, scorer, scorerUsername) {
 }
 
 export function expirePredictions(io, room) {
+	// If play ends before another goal resolves pending picks, refund their stakes and record them as expired.
 	const game = room.game;
 	if (game == null) return;
 	const matchState = matchStateFor(game);

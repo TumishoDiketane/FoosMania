@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Route username availability checks and delegate page requests to
+ * the view routes.
+ */
 import express from 'express';
 import { usernameExists } from '../handlers/user-handler.js';
 

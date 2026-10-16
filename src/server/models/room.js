@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Create room defaults for members, host settings, teams, pucks, and
+ * match state, with optional caller-provided values applied afterward.
+ */
 import { POWERUPS } from '../utils/constants.js';
 
 export function createRoomModel(changes = {}) {

@@ -1,3 +1,9 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Check prediction eligibility, scoring, refunds, and result events.
+ */
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 import { randomUUID } from 'node:crypto';
@@ -49,6 +55,7 @@ function submit(io, room, socketId, username, type, target) {
 	return response;
 }
 
+// A correct player or team pick earns the reward; a spectator cannot submit twice per round.
 test('spectators can make one pick per goal round and receive correct rewards', () => {
 	const room = makeRoom();
 	const io = makeIo();
@@ -75,6 +82,7 @@ test('spectators can make one pick per goal round and receive correct rewards', 
 	});
 });
 
+// Incorrect team picks lose points, while an uncredited team-only goal refunds player picks.
 test('incorrect picks lose the penalty and team-only goals void player picks', () => {
 	const room = makeRoom();
 	const io = makeIo();
@@ -88,6 +96,7 @@ test('incorrect picks lose the penalty and team-only goals void player picks', (
 	assert.ok(io.events.some((entry) => entry.id === 'spectator-3' && entry.event === 'game:prediction-result' && entry.data.outcome === 'void'));
 });
 
+// A match ending before the next goal restores the pending stake and marks it expired.
 test('pending picks are refunded when a match expires', () => {
 	const room = makeRoom();
 	const io = makeIo();
@@ -100,6 +109,7 @@ test('pending picks are refunded when a match expires', () => {
 	assert.equal(getMatchPredictionStats(room.game)[0].expired, 1);
 });
 
+// Reject non-spectators, unknown targets, and attempts during a kickoff/goal freeze.
 test('non-spectators, invalid targets, and frozen matches cannot submit', () => {
 	const room = makeRoom();
 	const io = makeIo();

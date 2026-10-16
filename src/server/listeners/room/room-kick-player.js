@@ -1,3 +1,10 @@
+/*
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Check the host's request and remove the selected player from the
+ * lobby, notifying the target socket.
+ */
 import { getUserRoom, removeUserFromRoom } from '../../handlers/user-handler.js';
 
 export const event = 'room:kick-player';

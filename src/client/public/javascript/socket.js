@@ -1,6 +1,10 @@
 /*
-    Socket connection handling.
-*/
+ * Authors:
+ * Lesiba Ledwaba — Student No. 2025717063
+ * Tumisho Diketane — Student No. 2024965994
+ * Purpose: Reuse the shared socket for the same username and replace it when
+ * the active identity changes.
+ */
 
 let socket = null;
 
