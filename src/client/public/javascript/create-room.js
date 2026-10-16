@@ -37,6 +37,7 @@
         }
     });
 
+    // Prevent duplicate submits while waiting for the server acknowledgement.
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
         if (creating) return;

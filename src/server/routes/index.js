@@ -12,6 +12,7 @@ import pagesRoutes from "./pages.js";
 
 const router = express.Router();
 
+// Let the client check a name before saving it to the session.
 router.get('/username-exists', (req, res) => {
     const username = req.query.username;
     res.status(200).json({ exists: usernameExists(username) });

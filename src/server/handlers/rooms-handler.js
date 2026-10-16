@@ -58,6 +58,7 @@ function generateRoomCode() {
 	}
 }
 
+// Create the room with a unique code and two different planet names.
 export function createRoom(payload) {
 	const room = createRoomModel(payload);
 
@@ -76,6 +77,7 @@ export function createRoom(payload) {
 	return room;
 }
 
+// Stop any active game before removing the room from memory.
 export function removeRoom(roomId) {
 	const room = rooms.get(roomId);
 

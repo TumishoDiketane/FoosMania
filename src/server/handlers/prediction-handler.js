@@ -14,9 +14,11 @@ export const PREDICTION_RULES = Object.freeze({
 	startingPoints: 100,
 });
 
+// Keep user points across matches, but store each match's picks separately.
 const profiles = new Map();
 const matchStates = new WeakMap();
 
+// Create a match record the first time this game needs prediction data.
 function matchStateFor(game) {
 	let state = matchStates.get(game);
 	if (state == null) {
@@ -30,6 +32,7 @@ export function initializePredictionMatch(game) {
 	matchStates.set(game, { predictions: [], round: 0, stats: {} });
 }
 
+// Give each spectator their starting points the first time they predict.
 function getProfile(username) {
 	if (!profiles.has(username)) {
 		profiles.set(username, { points: PREDICTION_RULES.startingPoints, history: [] });
@@ -54,6 +57,7 @@ function fail(callback, reason) {
 	callback?.({ success: false, reason });
 }
 
+// Share the round and pending count without revealing anyone's pick.
 function emitPublicUpdate(io, room) {
 	const game = room.game;
 	if (game == null) return;
@@ -165,6 +169,7 @@ function resolvePrediction(io, room, game, prediction, scorer, scorerUsername) {
 }
 
 export function resolvePredictions(io, room, scorer, scorerUsername) {
+	// A goal settles every pending pick, then opens the next prediction round.
 	const game = room.game;
 	if (game == null) return;
 	const matchState = matchStateFor(game);

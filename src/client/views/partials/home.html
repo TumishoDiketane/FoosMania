@@ -335,6 +335,7 @@ home.js uses #username-form, #room-list, and #room-code; styles stay scoped to .
 <div class="home-shell">
     <div class="home-inner">
         
+        <!-- Username entry unlocks the lobby actions below. -->
         <header class="home-head">
             <div class="brand">
                 <div class="brand-text">
@@ -355,6 +356,7 @@ home.js uses #username-form, #room-list, and #room-code; styles stay scoped to .
             </form>
         </section>
 
+        <!-- Room creation, code joining, and live room results. -->
         <div id="lobby-controls">
         <a id="create-room-link" class="action-btn create-btn nav-link is-disabled" href="/create-room" aria-disabled="true" tabindex="-1">Create room</a>
         <div class="divider"></div>

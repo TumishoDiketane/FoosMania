@@ -1160,6 +1160,7 @@ The IDs and data attributes are the interface consumed by pitch.js.
 </style>
 
 <div class="pitch-shell">
+    <!-- Score and match time are updated from server snapshots. -->
     <div id="scoreline">
         <span id="score-a" class="team-a team-score">
             <span id="flag-a" class="team-flag" aria-hidden="true"></span>
@@ -1174,6 +1175,7 @@ The IDs and data attributes are the interface consumed by pitch.js.
         </span>
         <span id="match-clock" hidden>0:00</span>
     </div>
+    <!-- These panels appear only when the player's role and match phase allow them. -->
     <section id="substitution-panel" hidden aria-label="Substitution controls">
         <div id="substitution-form" class="substitution-form" hidden>
             <label for="substitution-target">Request to replace</label>
@@ -1184,6 +1186,7 @@ The IDs and data attributes are the interface consumed by pitch.js.
         <p id="substitution-message" aria-live="polite"></p>
     </section>
     <button id="enable-motion" hidden>Enable motion controls</button>
+    <!-- The canvas holds the pitch; overlays show goals, countdowns, and power-ups. -->
     <div id="pitch-container">
         <canvas id="pitch" width="800" height="500"></canvas>
         <div id="flick" hidden>FLICK!</div>
@@ -1191,6 +1194,7 @@ The IDs and data attributes are the interface consumed by pitch.js.
         <div id="countdown" hidden></div>
         <div id="powerup-toast"></div>
     </div>
+    <!-- Touch players select one movement mode; only its controls are shown. -->
     <section id="mobile-controls" hidden aria-label="Mobile movement controls">
         <div class="control-mode-group" role="group" aria-label="Movement mode">
             <button class="control-mode-button" type="button" data-control-mode="tilt" aria-pressed="true">Tilt</button>
@@ -1207,6 +1211,7 @@ The IDs and data attributes are the interface consumed by pitch.js.
             <button class="move-button" type="button" data-move-direction="down" style="grid-area:down" aria-label="Move down">&#9660;</button>
         </div>
     </section>
+    <!-- Spectators can predict the next scorer during regular live play. -->
     <section id="prediction-panel" hidden aria-label="Next goal prediction">
         <h2>PREDICT THE NEXT GOAL</h2>
         <p>Who scores next?</p>
@@ -1220,6 +1225,7 @@ The IDs and data attributes are the interface consumed by pitch.js.
         <p id="prediction-message" aria-live="polite"></p>
         <ol id="prediction-history" aria-label="Recent prediction results"></ol>
     </section>
+    <!-- The penalty panel replaces regular controls during a shootout. -->
     <section id="shootout-panel" hidden aria-label="Penalty shootout">
         <header class="shootout-header">
             <div class="shootout-header-copy">
